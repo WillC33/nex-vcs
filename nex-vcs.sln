@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "nex-vcs.core", "nex-vcs.core\nex-vcs.core.fsproj", "{962D6BB7-D96D-4ECF-9A14-D8CCFB999D11}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "nex-vcs.cli", "nex-vcs.cli\nex-vcs.cli.fsproj", "{72D42FE5-5047-462D-A2C9-90B67E753812}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "nex-vcs.server", "nex-vcs.server\nex-vcs.server.fsproj", "{208298F3-260D-4723-8898-246CBDDF36A4}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "nex-vcs.tests", "nex-vcs.tests\nex-vcs.tests.fsproj", "{7774BFF5-07E4-472E-8806-6AB72CD1086A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{962D6BB7-D96D-4ECF-9A14-D8CCFB999D11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{962D6BB7-D96D-4ECF-9A14-D8CCFB999D11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{962D6BB7-D96D-4ECF-9A14-D8CCFB999D11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{962D6BB7-D96D-4ECF-9A14-D8CCFB999D11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72D42FE5-5047-462D-A2C9-90B67E753812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72D42FE5-5047-462D-A2C9-90B67E753812}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72D42FE5-5047-462D-A2C9-90B67E753812}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72D42FE5-5047-462D-A2C9-90B67E753812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{208298F3-260D-4723-8898-246CBDDF36A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{208298F3-260D-4723-8898-246CBDDF36A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{208298F3-260D-4723-8898-246CBDDF36A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{208298F3-260D-4723-8898-246CBDDF36A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7774BFF5-07E4-472E-8806-6AB72CD1086A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7774BFF5-07E4-472E-8806-6AB72CD1086A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7774BFF5-07E4-472E-8806-6AB72CD1086A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7774BFF5-07E4-472E-8806-6AB72CD1086A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

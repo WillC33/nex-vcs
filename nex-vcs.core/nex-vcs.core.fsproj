@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>nex_vcs.core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup><Compile Include="types/config.fs" /></ItemGroup>
+    <ItemGroup>
+        <Compile Include="utils\directory-management.fs" />
+        <Compile Include="utils\configuration.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="operations\log.fs" />
+        <Compile Include="operations\checkout.fs" />
+        <Compile Include="operations\commit.fs" />
+        <Compile Include="operations\init.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Program.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.3" />
+      <PackageReference Include="Tomlyn" Version="0.18.0" />
+    </ItemGroup>
+
+</Project>
