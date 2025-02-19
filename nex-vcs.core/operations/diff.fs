@@ -47,6 +47,7 @@ module Diff =
         if File.Exists(headPath) then
             let commitHash = File.ReadAllText(headPath).Trim()
             printfn $"{commitHash}"
+
             if String.IsNullOrEmpty(commitHash) then
                 None
             else
@@ -123,7 +124,8 @@ module Diff =
                     removedFiles |> List.iter (printfn "  %s")
 
     let diffAll =
-        let workingDir = ConfigParser.getWorkingDirectory ()
+        let workingDir = Config.getWorkingDirectory ()
+
         match tryGetNexRepoPath () with
         | Some repoDir -> diff repoDir workingDir
         | None -> failwith "No nex repo could be found"
