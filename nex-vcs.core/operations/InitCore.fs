@@ -8,7 +8,7 @@ open Nex.Core.Utils.Directories
 /// <summary>
 /// Core logic for initialising a nex repository in a given directory
 /// </summary>
-module Init =
+module InitCore =
 
     /// <summary>
     /// Ensures that a directory is created at the path
@@ -34,7 +34,7 @@ module Init =
             Error DirectoryCreateFailed
 
     /// <summary>
-    /// Check whether a nex repository has already been generate in the directory
+    /// Check whether a nex repository has already been generated in the directory
     /// </summary>
     /// <param name="path"></param>
     let private checkRepositoryExists path =
@@ -60,7 +60,6 @@ module Init =
     /// </summary>
     /// <remarks>
     /// This is the primary public interface for initialising a repository and can be called in user facing functionality
-    ///
     /// </remarks>
     /// <param name="workingDirOpt"></param>
     let initRepo (workingDirOpt: string option) : Result<InitAction, InitAction> =

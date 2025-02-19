@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.mituuz.fuzzier.FuzzierSettings">
+    <option name="modules">
+      <map>
+        <entry key="nex-vcs" value="$PROJECT_DIR$" />
+      </map>
+    </option>
+    <option name="project" value="true" />
+  </component>
+</project>

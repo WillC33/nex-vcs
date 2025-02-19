@@ -16,7 +16,6 @@ module Config =
         let configContent =
             $"""# Nex configuration File
 
-# The working directory for the Nex repository.
 working_directory = "{workingDirectory}"
 language = "{language}"
       """

@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="operations\init.fs"/>
+        <Compile Include="operations\InitCore.fs"/>
         <Compile Include="operations\log.fs"/>
         <Compile Include="operations\checkout.fs"/>
         <Compile Include="operations\commit.fs"/>

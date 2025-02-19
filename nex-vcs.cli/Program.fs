@@ -1,44 +1,80 @@
 ﻿module Nex.Core.Main
 
+open System
+open Argu
 open Nex.Core.Types
 open Nex.Core.Utils
 open Nex.Core.Utils.Locale
 open Nex.Core.Utils.Locale.Tr
+open WriterUI
 
-let requiresRepo cmd =
-    match cmd with
-    | "init" -> false
-    | _ -> true
+type LogArgs =
+    | [<AltCommandLine("-c")>] Concise
+
+    interface IArgParserTemplate with
+        member s.Usage =
+            match s with
+            | Concise -> "Show log in concise format"
+
+type CliArguments =
+    | [<CliPrefix(CliPrefix.None)>] Init of path: string option
+    | [<CliPrefix(CliPrefix.None)>] Commit of message: string
+    | [<CliPrefix(CliPrefix.None)>] Diff
+    | [<CliPrefix(CliPrefix.None)>] Checkout of hash: string
+    | [<CliPrefix(CliPrefix.None)>] Log of ParseResults<LogArgs>
+
+    interface IArgParserTemplate with
+        member s.Usage =
+            match s with
+            | Init _ -> "Initialise a new nex repository in the specified path or current directory"
+            | Commit _ -> "Create a new commit with the specified message"
+            | Diff -> "Show changes between working directory and last commit"
+            | Checkout _ -> "Checkout a specific commit by hash"
+            | Log _ -> "Show commit history (use -c for concise format)"
+
+let errorHandler =
+    ProcessExiter(
+        colorizer =
+            function
+            | ErrorCode.HelpText -> None
+            | _ -> Some ConsoleColor.DarkYellow
+    )
+
+let parser =
+    ArgumentParser.Create<CliArguments>(programName = "nex", errorHandler = errorHandler)
 
 [<EntryPoint>]
 let main argv =
-    // In situations where the config cannot be read the language will be handled by the system
-    // This is a fallback option called with getMessage instead of getLocalisedMessage
-    let preConfigLang = getSystemLanguage ()
+    Writer.Message("nex vcs v0.1", ConsoleColor.Green)
 
     try
-        match argv with
-        | args when requiresRepo args[0] && Result.isError (Config.loadConfig ()) ->
-            printfn "This command requires a nex repository. Run 'nex init' first."
-            1
-        | [| "init" |]
-        | [| "init"; _ |] ->
-            let path =
-                match argv with
-                | [| _; path |] -> Some path
-                | _ -> None
+        let results = parser.ParseCommandLine(argv)
 
-            match Init.initRepo path with
-            | Ok t -> getMessage preConfigLang (InitResponse t)
-            | Error e -> getMessage preConfigLang (InitResponse e)
-            |> printf "%s"
+        match results.GetAllResults() with
+        | [ Init path ] ->
+            match InitCore.initRepo path with
+            | Ok t -> getLocalisedMessage (InitResponse t) |> Writer.Message
+            | Error e -> getLocalisedMessage (InitResponse e) |> Writer.Error
 
             0
-        | [| "commit"; message |] ->
+
+        | cmd when
+            List.exists
+                (function
+                | Init _ -> false
+                | _ -> true)
+                cmd
+            && Result.isError (Config.loadConfig ())
+            ->
+            printfn "This command requires a nex repository. Run 'nex init' first."
+            1
+
+        | [ Commit message ] ->
             printfn $"Committing with message: %s{message}"
             Commit.commitSingleFile message
             0
-        | [| "diff" |] ->
+
+        | [ Diff ] ->
             printfn "Checking changes to the repo:"
             let oldText = System.IO.File.ReadAllText("oldVersion.txt")
             let newText = System.IO.File.ReadAllText("newVersion.txt")
@@ -49,18 +85,22 @@ let main argv =
                 printfn "At A:%d, B:%d, deleted: %d, inserted: %d" d.StartA d.StartB d.deletedA d.insertedB)
 
             0
-        | [| "checkout"; hash |] ->
+
+        | [ Checkout hash ] ->
             printfn $"Checking out the commit: %s{hash}"
             Checkout.checkoutCommit hash
             0
-        | [| "log" |] ->
-            printfn "-- Commit log --"
-            Log.showLog ()
-            0
-        | _ ->
-            printfn "Usage: nex <command> [options]"
-            0
-    with _ ->
 
-        getMessage preConfigLang (FaultResponse Fatal) |> printf "%s"
+        | [ Log logArgs ] ->
+            printfn "-- Commit log --"
+            let isConcise = logArgs.Contains Concise
+            Log.showLog () // Update Log.showLog to accept isConcise parameter
+            0
+
+        | _ ->
+            parser.PrintUsage() |> printfn "%s"
+            0
+
+    with ex ->
+        getLocalisedMessage (FaultResponse Fatal) |> Writer.Error
         1
