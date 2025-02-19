@@ -2,13 +2,14 @@ namespace Nex.Core
 
 open System.IO
 open Nex.Core.Utils
+open Nex.Core.Utils.Directories
 
 module Init =
 
     /// Initialises a nex repository in the given working directory.
     /// If no directory is provided, uses the current directory.
     let initRepo (workingDirOpt: string option) =
-        let workingDir = dir_utils.fetchInitDir workingDirOpt
+        let workingDir = fetchInitDir workingDirOpt
 
         // Compute the repository path as a subdirectory of the working directory
         let repositoryDir = Path.Combine(workingDir, ".nex")
@@ -20,7 +21,7 @@ module Init =
         if Directory.Exists(repositoryDir) then
             printfn $"A repo already exists at %s{repositoryDir}."
         else
-            // Create repository directories as well as an default HEAD and config
+            // Create repository directories as well as a default HEAD and config
             Directory.CreateDirectory(repositoryDir) |> ignore
             Directory.CreateDirectory(objectsDir) |> ignore
             Directory.CreateDirectory(refsDir) |> ignore

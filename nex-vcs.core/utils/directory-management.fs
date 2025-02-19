@@ -1,4 +1,4 @@
-module Nex.Core.Utils.dir_utils
+module Nex.Core.Utils.Directories
 
 open System
 open System.IO

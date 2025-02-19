@@ -2,7 +2,7 @@ namespace Nex.Core.Utils
 
 open System.IO
 open Nex.Core.Types
-open Nex.Core.Utils.dir_utils
+open Nex.Core.Utils.Directories
 open Tomlyn
 
 module ConfigParser =

@@ -1,4 +1,6 @@
-﻿open Nex.Core
+﻿module Nex.Core.Main
+
+open Nex.Core
 
 [<EntryPoint>]
 let main argv =
@@ -12,6 +14,10 @@ let main argv =
         printfn $"Committing with message: %s{message}"
         Commit.commitSingleFile message
         0
+    | [| "diff"; |] ->
+        printfn "Checking changes to the repo:"
+        Diff.diffAll
+        0
     | [| "checkout"; hash |] ->
         printfn $"Checking out the commit: %s{hash}"
         Checkout.checkoutCommit hash
@@ -23,4 +29,3 @@ let main argv =
     | _ ->
         printfn "Usage: nex <command> [options]"
         0
-

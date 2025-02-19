@@ -4,19 +4,25 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <RootNamespace>nex_vcs.core</RootNamespace>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
-    <ItemGroup><Compile Include="types/config.fs" /></ItemGroup>
+    <ItemGroup>
+      <Compile Include="types/config.fs" />
+      <Compile Include="types/commit.fs" />
+    </ItemGroup>
     <ItemGroup>
         <Compile Include="utils\directory-management.fs" />
         <Compile Include="utils\configuration.fs" />
+        <Compile Include="utils\hashing.fs" />
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="operations\init.fs" />
         <Compile Include="operations\log.fs" />
         <Compile Include="operations\checkout.fs" />
         <Compile Include="operations\commit.fs" />
-        <Compile Include="operations\init.fs" />
+        <Compile Include="operations\diff.fs" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Program.fs"/>

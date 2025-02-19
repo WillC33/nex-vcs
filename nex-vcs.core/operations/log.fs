@@ -3,21 +3,12 @@ namespace Nex.Core
 open System
 open System.IO
 open Newtonsoft.Json
+open Nex.Core.Types
 open Nex.Core.Utils.ConfigParser
 
 module Log =
 
     /// Represents a file entry in a commit.
-    type FileEntry = { path: string; hash: string }
-
-    /// Represents a commit object.
-    type CommitObj = {
-        id: string
-        parent: string option
-        message: string
-        timestamp: DateTime
-        files: FileEntry list
-    }
 
     /// Reads and deserializes a commit object from the objects directory.
     let private readCommit (commitHash: string) : CommitObj =
