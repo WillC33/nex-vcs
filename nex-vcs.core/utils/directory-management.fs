@@ -27,9 +27,3 @@ let tryGetNexRepoPath () =
             directoryIfExists repoPath
         else
             None)
-    
-    
-// Example usage:
-//match tryGetNexRepoPath () with
-//| Some path -> printfn "Nex repository found at: %s" path
-//| None -> printfn "No Nex repository found. Please initialize one."

@@ -2,12 +2,16 @@
 
 open System
 open Argu
+open Nex.Cli
 open Nex.Core.Types
 open Nex.Core.Utils
 open Nex.Core.Utils.Locale
 open Nex.Core.Utils.Locale.Tr
 open WriterUI
 
+/// <summary>
+/// Sub args for the log command
+/// </summary>
 type LogArgs =
     | [<AltCommandLine("-c")>] Concise
 
@@ -16,6 +20,9 @@ type LogArgs =
             match s with
             | Concise -> "Show log in concise format"
 
+/// <summary>
+/// Type for the core top level commands accessible via the cli
+/// </summary>
 type CliArguments =
     | [<CliPrefix(CliPrefix.None)>] Init of path: string option
     | [<CliPrefix(CliPrefix.None)>] Commit of message: string
@@ -32,6 +39,9 @@ type CliArguments =
             | Checkout _ -> "Checkout a specific commit by hash"
             | Log _ -> "Show commit history (use -c for concise format)"
 
+/// <summary>
+/// Handles unmatched arguments by returning Argu docs
+/// </summary>
 let errorHandler =
     ProcessExiter(
         colorizer =
@@ -40,12 +50,19 @@ let errorHandler =
             | _ -> Some ConsoleColor.DarkYellow
     )
 
+/// <summary>
+/// The main parser implementation
+/// </summary>
 let parser =
     ArgumentParser.Create<CliArguments>(programName = "nex", errorHandler = errorHandler)
 
+/// <summary>
+/// Main
+/// </summary>
+/// <param name="argv">The CLI args</param>
 [<EntryPoint>]
 let main argv =
-    Writer.Message("nex vcs v0.1", ConsoleColor.Green)
+    Writer.Message("NEX VCS v0.1.0", ConsoleColor.DarkCyan)
 
     try
         let results = parser.ParseCommandLine(argv)
@@ -53,8 +70,8 @@ let main argv =
         match results.GetAllResults() with
         | [ Init path ] ->
             match InitCore.initRepo path with
-            | Ok t -> getLocalisedMessage (InitResponse t) |> Writer.Message
-            | Error e -> getLocalisedMessage (InitResponse e) |> Writer.Error
+            | Ok t -> getLocalisedMessage path (InitResponse t) |> Writer.Message
+            | Error e -> getLocalisedMessage path (InitResponse e) |> Writer.Error
 
             0
 
@@ -75,15 +92,9 @@ let main argv =
             0
 
         | [ Diff ] ->
-            printfn "Checking changes to the repo:"
-            let oldText = System.IO.File.ReadAllText("oldVersion.txt")
-            let newText = System.IO.File.ReadAllText("newVersion.txt")
-            let diffs = DiffEngine.Diff.diffText oldText newText
-
-            diffs
-            |> List.iter (fun d ->
-                printfn "At A:%d, B:%d, deleted: %d, inserted: %d" d.StartA d.StartB d.deletedA d.insertedB)
-
+            Writer.Message("Changes in working directory:", ConsoleColor.White)
+            let diffs = DiffCore.diffWorkingDirectory ()
+            DiffCli.displaySummaryDiffs diffs
             0
 
         | [ Checkout hash ] ->
@@ -102,5 +113,5 @@ let main argv =
             0
 
     with ex ->
-        getLocalisedMessage (FaultResponse Fatal) |> Writer.Error
+        getLocalisedMessage None (FaultResponse Fatal) |> Writer.Error
         1

@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Compile Include="InitCore.fs"/>
+        <Compile Include="diff-engine.fs"/>
     </ItemGroup>
 
     <ItemGroup>

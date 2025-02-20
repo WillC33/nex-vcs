@@ -12,6 +12,16 @@ type InitAction =
     | ConfigWriteFailed
 
 /// <summary>
+/// Represents the actions
+/// </summary>
+type DiffAction =
+    // Ok
+    | FileDiffResult
+    | CodeDiffResult
+    // Faults
+    | FailedToGenerate
+
+/// <summary>
 /// Represents the actions that can be returned from the commit command
 /// </summary>
 type CommitAction = | Created

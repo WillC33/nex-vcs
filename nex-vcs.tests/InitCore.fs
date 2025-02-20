@@ -1,13 +1,29 @@
 ﻿module InitCore
 
 open System
+open System.Diagnostics
 open System.IO
 open Xunit
 open Nex.Core
 open Nex.Core.Types
 
+/// <summary>
+/// Tests for the public api of init operation
+/// </summary>
 type InitCoreTests() =
+
+    /// Helper to generate a temporary testing dir
     let tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())
+
+    /// Helper for testing failures with permissions on write for unix file system types
+    let createDirectoryWithPermissions path permissions =
+        Directory.CreateDirectory(path) |> ignore
+        let psi = ProcessStartInfo("chmod", permissions + " " + path)
+        psi.RedirectStandardOutput <- true
+        psi.UseShellExecute <- false
+        psi.CreateNoWindow <- true
+        let proc = Process.Start(psi)
+        proc.WaitForExit()
 
     // Cleans up created files and directories
     interface IDisposable with
@@ -19,6 +35,7 @@ type InitCoreTests() =
 
             if Directory.Exists(defaultDir) then
                 Directory.Delete(defaultDir, true)
+
 
 
     [<Fact>]
@@ -48,7 +65,7 @@ type InitCoreTests() =
 
     [<Fact>]
     member _.``Repository creation fails with invalid path``() =
-        let result = InitCore.initRepo (Some "/invalid/path/that/should/not/exist")
+        let result = InitCore.initRepo (Some "/invalid///path/that/should/not/exist")
 
         Assert.True(
             match result with
@@ -86,4 +103,17 @@ type InitCoreTests() =
             match result with
             | Error DirectoryCreateFailed -> false
             | _ -> true
+        )
+
+    [<Fact>]
+    member _.``Repository creation should return Error when directory cannot be created due to permission issues``() =
+        let protectedDir = Path.Combine(tempPath, "protectedDir")
+        Directory.CreateDirectory(protectedDir) |> ignore
+        createDirectoryWithPermissions protectedDir "400"
+        let result = InitCore.initRepo (Some protectedDir)
+
+        Assert.True(
+            match result with
+            | Error DirectoryCreateFailed -> true
+            | _ -> false
         )

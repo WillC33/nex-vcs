@@ -9,6 +9,7 @@
         <Compile Include="types/config.fs"/>
         <Compile Include="types/commit.fs"/>
         <Compile Include="types\actions.fs"/>
+        <Compile Include="types\diffs.fs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -27,7 +28,7 @@
         <Compile Include="operations\log.fs"/>
         <Compile Include="operations\checkout.fs"/>
         <Compile Include="operations\commit.fs"/>
-        <Compile Include="operations\diff.fs"/>
+        <Compile Include="operations\DiffCore.fs"/>
     </ItemGroup>
 
     <ItemGroup>

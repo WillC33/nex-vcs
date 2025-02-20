@@ -24,32 +24,46 @@ type Message =
 module Tr =
 
     /// <summary>
-    /// The object map for all localisable string within the system
+    /// Type union to define a type that allows the programme to return dynamic or static strings for responses
+    /// </summary>
+    type private Translatable =
+        | Simple of string
+        | WithArgs of (string -> string)
+
+
+    /// <summary>
+    /// The object map for all localisable strings within the system
     /// </summary>
     /// <remarks>
     /// These translations are first grouped by the language and then by a type union
-    /// that maps the
+    /// that maps the Message to a 'Translatable' Type which can take arguments for dynamic responses or return a static
+    /// string for a particular action's output
     /// </remarks>
-    let private translations =
+    let private translations: Map<Language, Map<Message, Translatable>> =
         Map.ofList
             [ (EN,
                Map.ofList
-                   [ (InitResponse RepositoryCreated, "Repository created successfully")
-                     (InitResponse RepositoryExists, "A repository already exists at this location")
-                     (InitResponse DirectoryCreateFailed, "Failed to create directory")
-                     (InitResponse ConfigWriteFailed, "Failed to write configuration file")
-                     (CommitResponse Created, "Commit created")
+                   [ (InitResponse RepositoryCreated, WithArgs(sprintf "Repository created successfully @%s"))
+                     (InitResponse RepositoryExists, WithArgs(sprintf "A repository already exists at @%s"))
+                     (InitResponse DirectoryCreateFailed,
+                      Simple "Failed to create directory. Do you have sufficient permissions for this action?")
+                     (InitResponse ConfigWriteFailed,
+                      Simple "Failed to write configuration file. Do you have sufficient permissions for this action?")
+                     (CommitResponse Created, Simple "Commit created")
                      (FaultResponse Fatal,
-                      "Nex encountered an unrecoverable issue. Is there a valid .nex folder or .nexlink in this location? Create one with 'nex init'") ])
+                      Simple
+                          "Nex encountered an unrecoverable issue. Is there a valid .nex folder or .nexlink in this location?\\n
+                          Create one with 'nex init'") ])
               (FR,
                Map.ofList
-                   [ (InitResponse RepositoryCreated, "Dépôt créé avec succès")
-                     (InitResponse RepositoryExists, "Un dépôt existe déjà à cet emplacement")
-                     (InitResponse DirectoryCreateFailed, "Échec de la création du répertoire")
-                     (InitResponse ConfigWriteFailed, "Échec de l'écriture du fichier de configuration")
-                     (CommitResponse Created, "Commit créé")
+                   [ (InitResponse RepositoryCreated, WithArgs(sprintf "Dépôt créé avec succès @%s"))
+                     (InitResponse RepositoryExists, WithArgs(sprintf "Un dépôt existe déjà à @%s"))
+                     (InitResponse DirectoryCreateFailed, Simple "Échec de la création du répertoire")
+                     (InitResponse ConfigWriteFailed, Simple "Échec de l'écriture du fichier de configuration")
+                     (CommitResponse Created, Simple "Commit créé")
                      (FaultResponse Fatal,
-                      "Nex a rencontré un problème irrécupérable. Y a-t-il un dossier .nex valide ou un .nexlink à cet emplacement ? Créez-en un avec 'nex init'") ]) ]
+                      Simple
+                          "Nex a rencontré un problème irrécupérable. Y a-t-il un dossier .nex valide ou un .nexlink à cet emplacement ? Créez-en un avec 'nex init'") ]) ]
 
     /// <summary>
     /// Helper function to change a dotnet culture to a valid nex language or default to English
@@ -61,20 +75,44 @@ module Tr =
         | _ -> EN // Default to English
 
 
+    /// <summary>
+    /// Helper function for getting the relevant culture from a language code
+    /// </summary>
+    /// <param name="language">The 2 character language code from the config</param>
     let languageToCulture (language: string) =
         match language with
         | "FR" -> FR
         | _ -> EN
 
+    /// <summary>
+    /// Helper function to fetch the system language
+    /// </summary>
     let getSystemLanguage () =
         CultureInfo.CurrentUICulture |> cultureToLanguage
 
 
-    let getMessage (lang: Language) (msg: Message) =
+    /// <summary>
+    /// Function to get the non-localised version of a string by including a language
+    /// </summary>
+    /// <remarks>
+    ///  In most cases it is going to be correct to fetch a message via the 'getLocalisedMessages' function that applies
+    ///  the correct localisation to the message
+    /// </remarks>
+    /// <param name="arg"></param>
+    /// <param name="lang"></param>
+    /// <param name="msg"></param>
+    let getMessage arg (lang: Language) (msg: Message) =
         translations
         |> Map.tryFind lang
         |> Option.bind (fun langMap -> langMap |> Map.tryFind msg)
-        |> Option.defaultValue "Message not found"
+        |> function
+            | Some(Simple s) -> s
+            | Some(WithArgs f) -> f arg
+            | None -> failwith "Action Not found!"
 
-    /// Gets message in system language
-    let getLocalisedMessage = getLanguage () |> languageToCulture |> getMessage
+    /// <summary>
+    /// Function to fetch a localised version of the action message
+    /// </summary>
+    /// <param name="arg">An option string that can be fed into dynamic messages</param>
+    let getLocalisedMessage (arg: string option) =
+        getLanguage () |> languageToCulture |> (getMessage arg.Value)

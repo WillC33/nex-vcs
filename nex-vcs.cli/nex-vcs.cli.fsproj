@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <Compile Include="commands/init.fs"/>
+        <Compile Include="commands\DiffCli.fs"/>
     </ItemGroup>
 
     <ItemGroup>
