@@ -80,5 +80,5 @@ module InitCore =
             |> Result.bind (fun _ -> ensureDirectory paths.Objects)
             |> Result.bind (fun _ -> ensureDirectory paths.Refs)
             |> Result.bind (fun _ -> ensureFileWrite paths.Head "")
-            |> Result.bind (fun _ -> ensureWriteConfig paths.Config paths.Repository)
+            |> Result.bind (fun _ -> ensureWriteConfig paths.Config workingDirOpt.Value)
             |> Result.map (fun _ -> RepositoryCreated)

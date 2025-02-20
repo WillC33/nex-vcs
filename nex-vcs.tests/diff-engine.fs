@@ -1,7 +1,7 @@
 module DiffEngineTests
 
-open Nex.Core
 open Nex.Core.DiffEngine
+open Nex.Core.Types
 open Xunit
 
 type DiffEngineTests() =

@@ -9,9 +9,9 @@ namespace Nex.Core
  *)
 
 open System.Collections
+open System.Runtime.CompilerServices
 open System.Text.RegularExpressions
 open Nex.Core.Types
-
 
 
 /// Represents the result of the Shortest Middle Snake search.
@@ -30,6 +30,9 @@ type private DiffOpts =
     { TrimSpace: bool
       IgnoreSpace: bool
       IgnoreCase: bool }
+
+[<assembly: InternalsVisibleTo("nex-vcs.tests")>]
+do ()
 
 module internal DiffEngine =
 
@@ -64,7 +67,7 @@ module internal DiffEngine =
         codes
 
     /// Optimises a DiffData by shifting modified flags for better readability.
-    let optimise (data: DiffData) =
+    let private optimise (data: DiffData) =
         let mutable startPos = 0
 
         while startPos < data.Length do
@@ -189,7 +192,7 @@ module internal DiffEngine =
         if found then
             result
         else
-            failwith "No shortest middle snake could bve found"
+            failwith "No shortest middle snake could be found"
 
     /// <summary>
     /// A recursive implementation of the LCS algo
@@ -281,7 +284,7 @@ module internal DiffEngine =
         diffs |> Seq.toList
 
     /// <summary>
-    /// Main internal diffText function with overridable options
+    /// Main private diffText function with overridable options
     /// </summary>
     /// <param name="textA"></param>
     /// <param name="textB"></param>
