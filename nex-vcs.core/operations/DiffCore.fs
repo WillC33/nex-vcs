@@ -2,7 +2,8 @@ namespace Nex.Core
 
 open System
 open System.IO
-open Nex.Core.DiffEngine
+open Newtonsoft.Json
+open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.Directories
 
@@ -27,30 +28,66 @@ module DiffCore =
         | false -> standardIgnores
 
     /// <summary>
-    /// Fetches the content from the HEAD commit
+    /// Helper function to fetch the commit hash of HEAD
+    /// </summary>
+    /// <param name="repoPath"></param>
+    let private tryGetHeadCommitHash (repoPath: string) =
+        let headPath = Path.Combine(repoPath, "refs/HEAD")
+
+        if File.Exists(headPath) then
+            let hash = File.ReadAllText(headPath).Trim()
+            if String.IsNullOrEmpty(hash) then None else Some hash
+        else
+            None
+
+    /// <summary>
+    /// Helper to read a commit object
+    /// </summary>
+    /// <param name="repoPath"></param>
+    /// <param name="commitHash"></param>
+    let private tryReadCommitObject (repoPath: string) (commitHash: string) =
+        let objectPath = Path.Combine(repoPath, "objects", commitHash)
+
+        if File.Exists(objectPath) then
+            try
+                let commitJson = File.ReadAllText(objectPath)
+                Some(JsonConvert.DeserializeObject<CommitObj>(commitJson))
+            with _ ->
+                None
+        else
+            None
+
+    /// <summary>
+    /// Helper to read blob content
+    /// </summary>
+    /// <param name="repoPath"></param>
+    /// <param name="fileEntry"></param>
+    let private tryReadBlobContent (repoPath: string) (fileEntry: FileEntry) =
+        let blobPath = Path.Combine(repoPath, "objects", fileEntry.hash)
+
+        if File.Exists(blobPath) then
+            Some(File.ReadAllText(blobPath))
+        else
+            None
+
+    /// <summary>
+    /// Fetches the commited content at HEAD for a given file in the working directory
     /// </summary>
     /// <param name="filePath"></param>
     let private getCommittedContent (filePath: string) =
+        let relativeFilePath = Path.Combine(getWorkingDirectory (), filePath)
         match tryGetNexRepoPath () with
         | None -> ""
         | Some repoPath ->
-            let headPath = Path.Combine(repoPath, "HEAD")
-
-            if not (File.Exists(headPath)) then
-                ""
-            else
-                let commitHash = File.ReadAllText(headPath).Trim()
-
-                if commitHash = "" then
-                    ""
-                else
-                    let objectPath = Path.Combine(repoPath, "objects", commitHash)
-                    let fileObjectPath = Path.Combine(objectPath, filePath)
-
-                    if File.Exists(fileObjectPath) then
-                        File.ReadAllText(fileObjectPath)
-                    else
-                        ""
+            match tryGetHeadCommitHash repoPath with
+| None -> ""
+| Some commitHash ->
+    tryReadCommitObject repoPath commitHash
+    |> Option.bind (fun commit ->
+        commit.files
+        |> List.tryFind (fun f -> f.path = relativeFilePath)
+        |> Option.bind (tryReadBlobContent repoPath))
+    |> Option.defaultValue ""
 
     /// <summary>
     /// Checks against the .nexignore for matching patterns to exclude a file/directory

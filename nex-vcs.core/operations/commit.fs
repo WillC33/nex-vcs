@@ -2,10 +2,10 @@ namespace Nex.Core
 
 open System
 open System.IO
-open System.Security.Cryptography
 open System.Text
 open Newtonsoft.Json
 open Nex.Core.Types
+open Nex.Core.Utils
 open Nex.Core.Utils.Directories
 open Nex.Core.Utils.Hashing
 
@@ -19,6 +19,7 @@ module Commit =
     /// <param name="content">the content of the commit</param>
     let private writeBlob (repoPath: string) (blobHash: string) (content: byte[]) =
         let blobPath = Path.Combine($"{repoPath}/objects", blobHash)
+
         if File.Exists(blobPath) then
             ()
 
@@ -57,7 +58,8 @@ module Commit =
                 failwith
                     "No nex repository could be located for the commit. Does your folder contain a .nex folder or .nexlink?"
 
-        let filePath = "code.txt"
+        let workingDir = Config.getWorkingDirectory ()
+        let filePath = Path.Combine(workingDir, "new.js")
 
         if not (File.Exists(filePath)) then
             failwith "File 'code.txt' does not exist."
