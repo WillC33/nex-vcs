@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="utils\version.fs"/>
         <Compile Include="utils\directory-management.fs"/>
         <Compile Include="utils\configuration.fs"/>
         <Compile Include="utils\hashing.fs"/>

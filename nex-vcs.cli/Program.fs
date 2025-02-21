@@ -26,7 +26,7 @@ type LogArgs =
 type CliArguments =
     | [<CliPrefix(CliPrefix.None)>] Init of path: string option
     | [<CliPrefix(CliPrefix.None)>] Commit of message: string
-    | [<CliPrefix(CliPrefix.None)>] Diff
+    | [<CliPrefix(CliPrefix.None)>] Diff of path: string option
     | [<CliPrefix(CliPrefix.None)>] Checkout of hash: string
     | [<CliPrefix(CliPrefix.None)>] Log of ParseResults<LogArgs>
 
@@ -35,7 +35,7 @@ type CliArguments =
             match s with
             | Init _ -> "Initialise a new nex repository in the specified path or current directory"
             | Commit _ -> "Create a new commit with the specified message"
-            | Diff -> "Show changes between working directory and last commit"
+            | Diff _ -> "Show changes between working directory and last commit"
             | Checkout _ -> "Checkout a specific commit by hash"
             | Log _ -> "Show commit history (use -c for concise format)"
 
@@ -57,21 +57,23 @@ let parser =
     ArgumentParser.Create<CliArguments>(programName = "nex", errorHandler = errorHandler)
 
 /// <summary>
-/// Main
+/// Main switch for forwarding cli arguments to the relevant operations
 /// </summary>
 /// <param name="argv">The CLI args</param>
 [<EntryPoint>]
 let main argv =
-    Writer.Message("NEX VCS v0.1.0", ConsoleColor.DarkCyan)
+    getLocalisedMessage None (UtilityMessage VersionMessage) |> Writer.Message
 
     try
         let results = parser.ParseCommandLine(argv)
 
         match results.GetAllResults() with
         | [ Init path ] ->
-            match InitCore.initRepo path with
-            | Ok t -> getLocalisedMessage path (InitResponse t) |> Writer.Message
-            | Error e -> getLocalisedMessage path (InitResponse e) |> Writer.Error
+            let resolvedPath = defaultArg path ". " // Use current directory if no path provided
+
+            match InitCore.initRepo (Some resolvedPath) with
+            | Ok t -> getLocalisedMessage (Some resolvedPath) (InitResponse t) |> Writer.Message
+            | Error e -> getLocalisedMessage (Some resolvedPath) (InitResponse e) |> Writer.Error
 
             0
 
@@ -91,10 +93,13 @@ let main argv =
             Commit.commitSingleFile message
             0
 
-        | [ Diff ] ->
-            Writer.Message("Changes in working directory:", ConsoleColor.White)
-            let diffs = DiffCore.diffWorkingDirectory ()
-            DiffCli.displaySummaryDiffs diffs
+        | [ Diff path ] ->
+            Writer.Message("Uncommitted changes to the nex repo:", ConsoleColor.White)
+
+            match path with
+            | Some p -> DiffCore.diffFile p |> DiffCli.displayHunkDiffs p
+            | None -> DiffCore.diffWorkingDirectory () |> DiffCli.displaySummaryDiffs
+
             0
 
         | [ Checkout hash ] ->
