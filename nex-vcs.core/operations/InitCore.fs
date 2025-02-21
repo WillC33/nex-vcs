@@ -65,20 +65,20 @@ module InitCore =
     let initRepo (workingDirOpt: string option) : Result<InitAction, InitAction> =
         let createPaths workingDir =
             let repositoryDir = Path.Combine(workingDir, ".nex")
-
+    
             {| Repository = repositoryDir
                Objects = Path.Combine(repositoryDir, "objects")
                Refs = Path.Combine(repositoryDir, "refs")
                Head = Path.Combine(repositoryDir, "refs/HEAD")
                Config = Path.Combine(repositoryDir, "config.toml") |}
-
-        fetchInitDir workingDirOpt
-        |> createPaths
-        |> fun paths ->
-            checkRepositoryExists paths.Repository
-            |> Result.bind (fun _ -> ensureDirectory paths.Repository)
-            |> Result.bind (fun _ -> ensureDirectory paths.Objects)
-            |> Result.bind (fun _ -> ensureDirectory paths.Refs)
-            |> Result.bind (fun _ -> ensureFileWrite paths.Head "")
-            |> Result.bind (fun _ -> ensureWriteConfig paths.Config workingDirOpt.Value)
-            |> Result.map (fun _ -> RepositoryCreated)
+    
+        let workingDir = fetchInitDir workingDirOpt
+        let paths = createPaths workingDir
+        
+        checkRepositoryExists paths.Repository
+        |> Result.bind (fun _ -> ensureDirectory paths.Repository)
+        |> Result.bind (fun _ -> ensureDirectory paths.Objects)
+        |> Result.bind (fun _ -> ensureDirectory paths.Refs)
+        |> Result.bind (fun _ -> ensureFileWrite paths.Head "")
+        |> Result.bind (fun _ -> ensureWriteConfig paths.Config workingDir)
+        |> Result.map (fun _ -> RepositoryCreated)
