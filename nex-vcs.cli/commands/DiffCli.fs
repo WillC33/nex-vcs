@@ -2,6 +2,8 @@ module Nex.Cli.DiffCli
 
 open System
 open Nex.Core.Types
+open Nex.Core.Utils.Locale
+open Nex.Core.Utils.Locale.Tr
 open WriterUI
 
 let addedMessage =
@@ -26,7 +28,7 @@ let removedMessage =
 /// <param name="fileDiffs">List of file paths and their corresponding diff summaries</param>
 let displaySummaryDiffs (fileDiffs: (string * DiffItem list) list) =
     if List.isEmpty fileDiffs then
-        addedMessage "No changes detected"
+        getLocalisedMessage None (DiffResponse NoChanges) |> addedMessage
     else
         fileDiffs
         |> List.iter (fun (path, diffs) ->
@@ -36,11 +38,11 @@ let displaySummaryDiffs (fileDiffs: (string * DiffItem list) list) =
             |> List.iter (fun diff ->
                 let changeType =
                     match diff.deletedA, diff.insertedB with
-                    | 0, n -> $"Added {n} lines"
-                    | n, 0 -> $"Removed {n} lines"
-                    | n, m -> $"Changed {n} lines to {m} lines"
+                    | 0, n -> getLocalisedMessage (Some(n.ToString())) (DiffResponse AddedNLines)
+                    | n, 0 -> getLocalisedMessage (Some(n.ToString())) (DiffResponse DeletedNLines)
+                    | n, _ -> getLocalisedMessage (Some(n.ToString())) (DiffResponse ChangedNLines)
 
-                message None $"  {changeType} at line {diff.StartA + 1}"))
+                message None $"  {changeType} @ {diff.StartA + 1}"))
 
 /// <summary>
 /// Displays detailed hunk changes for a single file
@@ -48,7 +50,8 @@ let displaySummaryDiffs (fileDiffs: (string * DiffItem list) list) =
 /// <param name="path">File path</param>
 /// <param name="hunks">List of diff hunks</param>
 let displayHunkDiffs (path: string) (hunks: DiffHunk list) =
-    message None $"File: {path}"
+    getLocalisedMessage (Some path) (DiffResponse FileDiffResult_FileName)
+    |> message None
 
     if List.isEmpty hunks then
         message
@@ -78,36 +81,11 @@ let displayHunkDiffs (path: string) (hunks: DiffHunk list) =
                     message
                         (Some
                             { defaultOptions with
-                                CustomColor = Some ConsoleColor.Green })
+                                BackgroundColor = Some ConsoleColor.Green })
                         $"+{text}"
                 | Removed text ->
                     message
                         (Some
                             { defaultOptions with
-                                CustomColor = Some ConsoleColor.Red })
+                                BackgroundColor = Some ConsoleColor.Red })
                         $"-{text}"))
-
-/// <summary>
-/// Displays detailed hunk changes for a single file
-/// </summary>
-/// <param name="path">File path</param>
-/// <param name="hunks">List of diff hunks</param>
-let displayHunkDiffs (path: string) (hunks: DiffHunk list) =
-    Writer.Message($"File: {path}", ConsoleColor.White)
-
-    if List.isEmpty hunks then
-        Writer.Message("  No changes", ConsoleColor.Green)
-    else
-        hunks
-        |> List.iter (fun hunk ->
-            Writer.Message(
-                $"@@ -{hunk.StartLineA},{hunk.LinesA} +{hunk.StartLineB},{hunk.LinesB} @@",
-                ConsoleColor.Cyan
-            )
-
-            hunk.Lines
-            |> List.iter (fun line ->
-                match line with
-                | Context text -> Writer.Message($" {text}", ConsoleColor.Gray)
-                | Added text -> Writer.Message($"+{text}", ConsoleColor.Green)
-                | Removed text -> Writer.Message($"-{text}", ConsoleColor.Red)))

@@ -23,7 +23,7 @@ type DiffAction =
     | CodeDiffResult
     | AddedNLines
     | DeletedNLines
-    | ChangedNLinesToM
+    | ChangedNLines
     // Faults
     | FailedToGenerate
 

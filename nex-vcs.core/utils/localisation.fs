@@ -63,12 +63,11 @@ module Tr =
 
                      (DiffResponse UncommitedChanges, Simple "Uncommitted changes to the nex repo:")
                      (DiffResponse FileDiffResult_FileName, WithArgs(sprintf "File: %s"))
-                     (DiffResponse AddedNLines, WithArgs (sprintf "Added %s lines"))
-                     (DiffResponse DeletedNLines, WithArgs (sprintf "Deleted %s lines"))
-                     (DiffResponse ChangedNLinesToM, WithArgs (sprintf "Changed %s lines to %s lines"))
-                    
-                         | DeletedNLines
-                         | ChangedNLinesToM
+                     (DiffResponse NoChanges, Simple "No changes")
+                     (DiffResponse AddedNLines, WithArgs(sprintf "Added %s lines"))
+                     (DiffResponse DeletedNLines, WithArgs(sprintf "Deleted %s lines"))
+                     (DiffResponse ChangedNLines, WithArgs(sprintf "Changed %s lines"))
+
                      (CommitResponse Created, Simple "Commit created")
                      (FaultResponse Fatal,
                       Simple

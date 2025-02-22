@@ -7,6 +7,7 @@ open Nex.Core.Types
 open Nex.Core.Utils
 open Nex.Core.Utils.Locale
 open Nex.Core.Utils.Locale.Tr
+open WriterUI
 
 /// <summary>
 /// Sub args for the log command
@@ -61,7 +62,7 @@ let parser =
 /// <param name="argv">The CLI args</param>
 [<EntryPoint>]
 let main argv =
-    getLocalisedMessage None (UtilityMessage VersionMessage) |> Writer.Message
+    getLocalisedMessage None (UtilityMessage VersionMessage) |> message None
 
     try
         let results = parser.ParseCommandLine(argv)
@@ -71,8 +72,8 @@ let main argv =
             let resolvedPath = defaultArg path ". " // Use current directory if no path provided
 
             match InitCore.initRepo (Some resolvedPath) with
-            | Ok t -> getLocalisedMessage (Some resolvedPath) (InitResponse t) |> Writer.Message
-            | Error e -> getLocalisedMessage (Some resolvedPath) (InitResponse e) |> Writer.Error
+            | Ok t -> getLocalisedMessage (Some resolvedPath) (InitResponse t) |> message None
+            | Error e -> getLocalisedMessage (Some resolvedPath) (InitResponse e) |> error
 
             0
 
@@ -93,7 +94,7 @@ let main argv =
             0
 
         | [ Diff path ] ->
-            getLocalisedMessage None (DiffResponse UncommitedChanges) |> Writer.Message
+            getLocalisedMessage None (DiffResponse UncommitedChanges) |> message None
 
             match path with
             | Some p -> DiffCore.diffFile p |> DiffCli.displayHunkDiffs p
@@ -117,5 +118,5 @@ let main argv =
             0
 
     with ex ->
-        getLocalisedMessage None (FaultResponse Fatal) |> Writer.Error
+        getLocalisedMessage None (FaultResponse Fatal) |> error
         1
