@@ -15,9 +15,15 @@ type InitAction =
 /// Represents the actions
 /// </summary>
 type DiffAction =
+    // Feedback
+    | UncommitedChanges
+    | NoChanges
     // Ok
-    | FileDiffResult
+    | FileDiffResult_FileName
     | CodeDiffResult
+    | AddedNLines
+    | DeletedNLines
+    | ChangedNLinesToM
     // Faults
     | FailedToGenerate
 

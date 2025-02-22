@@ -3,6 +3,7 @@ namespace Nex.Core
 open System
 open System.IO
 open Newtonsoft.Json
+open Nex.Core.DiffEngine
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.Directories
@@ -76,18 +77,19 @@ module DiffCore =
     /// <param name="filePath"></param>
     let private getCommittedContent (filePath: string) =
         let relativeFilePath = Path.Combine(getWorkingDirectory (), filePath)
+
         match tryGetNexRepoPath () with
         | None -> ""
         | Some repoPath ->
             match tryGetHeadCommitHash repoPath with
-| None -> ""
-| Some commitHash ->
-    tryReadCommitObject repoPath commitHash
-    |> Option.bind (fun commit ->
-        commit.files
-        |> List.tryFind (fun f -> f.path = relativeFilePath)
-        |> Option.bind (tryReadBlobContent repoPath))
-    |> Option.defaultValue ""
+            | None -> ""
+            | Some commitHash ->
+                tryReadCommitObject repoPath commitHash
+                |> Option.bind (fun commit ->
+                    commit.files
+                    |> List.tryFind (fun f -> f.path = relativeFilePath)
+                    |> Option.bind (tryReadBlobContent repoPath))
+                |> Option.defaultValue ""
 
     /// <summary>
     /// Checks against the .nexignore for matching patterns to exclude a file/directory

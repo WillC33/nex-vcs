@@ -7,7 +7,6 @@ open Nex.Core.Types
 open Nex.Core.Utils
 open Nex.Core.Utils.Locale
 open Nex.Core.Utils.Locale.Tr
-open WriterUI
 
 /// <summary>
 /// Sub args for the log command
@@ -94,7 +93,7 @@ let main argv =
             0
 
         | [ Diff path ] ->
-            Writer.Message("Uncommitted changes to the nex repo:", ConsoleColor.White)
+            getLocalisedMessage None (DiffResponse UncommitedChanges) |> Writer.Message
 
             match path with
             | Some p -> DiffCore.diffFile p |> DiffCli.displayHunkDiffs p

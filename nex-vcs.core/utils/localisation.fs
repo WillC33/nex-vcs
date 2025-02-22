@@ -13,13 +13,12 @@ type Language =
     | EN
     | FR
 // Languages can be added as needed
+
 /// <summary>
 /// Represents general messages that fall outside of responses for actions
 /// </summary>
-type UtilityMessage =
-    | VersionMessage
-    | UncommitedChanges
-    | NoChanges
+type UtilityMessage = | VersionMessage
+
 
 /// <summary>
 /// Represents wrappers for system actions that need to reply with localised messages
@@ -27,6 +26,7 @@ type UtilityMessage =
 type Message =
     | InitResponse of InitAction
     | CommitResponse of CommitAction
+    | DiffResponse of DiffAction
     | UtilityMessage of UtilityMessage
     | FaultResponse of FaultAction
     | NotImplemented
@@ -60,17 +60,29 @@ module Tr =
                       Simple "Failed to create directory. Do you have sufficient permissions for this action?")
                      (InitResponse ConfigWriteFailed,
                       Simple "Failed to write configuration file. Do you have sufficient permissions for this action?")
+
+                     (DiffResponse UncommitedChanges, Simple "Uncommitted changes to the nex repo:")
+                     (DiffResponse FileDiffResult_FileName, WithArgs(sprintf "File: %s"))
+                     (DiffResponse AddedNLines, WithArgs (sprintf "Added %s lines"))
+                     (DiffResponse DeletedNLines, WithArgs (sprintf "Deleted %s lines"))
+                     (DiffResponse ChangedNLinesToM, WithArgs (sprintf "Changed %s lines to %s lines"))
+                    
+                         | DeletedNLines
+                         | ChangedNLinesToM
                      (CommitResponse Created, Simple "Commit created")
                      (FaultResponse Fatal,
                       Simple
                           "Nex encountered an unrecoverable issue. Is there a valid .nex folder or .nexlink in this location?\nCreate one with 'nex init'") ])
               (FR,
                Map.ofList
-                   [ (InitResponse RepositoryCreated, WithArgs(sprintf "Dépôt créé avec succès @ %s"))
+                   [ (UtilityMessage VersionMessage, Simple $"NEX VCS {printCurrent}")
+                     (InitResponse RepositoryCreated, WithArgs(sprintf "Dépôt créé avec succès @ %s"))
                      (InitResponse RepositoryExists, WithArgs(sprintf "Un dépôt existe déjà à @ %s"))
                      (InitResponse DirectoryCreateFailed, Simple "Échec de la création du répertoire")
                      (InitResponse ConfigWriteFailed, Simple "Échec de l'écriture du fichier de configuration")
                      (CommitResponse Created, Simple "Commit créé")
+
+                     (DiffResponse UncommitedChanges, Simple "Modifications non validées dans le dépôt nex :")
                      (FaultResponse Fatal,
                       Simple
                           "Nex a rencontré un problème irrécupérable. Y a-t-il un dossier .nex valide ou un .nexlink à cet emplacement ?\nCréez-en un avec 'nex init'") ]) ]
@@ -112,6 +124,8 @@ module Tr =
     /// <param name="lang"></param>
     /// <param name="msg"></param>
     let getMessage (arg: string option) (lang: Language) (msg: Message) =
+        //printfn "Message not found for language: %A, message: %A" lang msg //TODO: Remove me once the functionality is complete
+
         translations
         |> Map.tryFind lang
         |> Option.bind (fun langMap -> langMap |> Map.tryFind msg)

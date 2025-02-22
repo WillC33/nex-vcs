@@ -18,11 +18,12 @@
 
     <ItemGroup>
         <Compile Include="Program.fs"/>
+        <Folder Include="writer\"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Argu" Version="6.2.5"/>
-        <PackageReference Include="WriterUI" Version="1.0.1"/>
+        <PackageReference Include="WriterUI" Version="2.0.0"/>
     </ItemGroup>
 
 </Project>
