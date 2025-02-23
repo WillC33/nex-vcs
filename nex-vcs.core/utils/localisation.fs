@@ -70,8 +70,8 @@ module Tr =
 
                      (CommitResponse Created, Simple "Commit created")
                      (FaultResponse NoRepo,
- Simple
-     "No nex repo could be found. Is there a valid .nex folder or .nexlink in this location?\nCreate one with 'nex init'")
+                      Simple
+                          "No nex repo could be found. Is there a valid .nex folder or .nexlink in this location?\nCreate one with 'nex init'")
                      (FaultResponse Fatal,
                       Simple
                           "Nex encountered an unrecoverable issue. Is there a valid .nex folder or .nexlink in this location?\nCreate one with 'nex init'") ])

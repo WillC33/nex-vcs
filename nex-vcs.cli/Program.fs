@@ -2,8 +2,12 @@
 
 open System
 open Argu
+open Nex.Cli
+open Nex.Core.Types
+open Nex.Core.Utils
 open Nex.Core.Utils.Locale
 open Nex.Core.Utils.Locale.Tr
+open WriterUI
 
 /// <summary>
 /// Sub args for the log command
@@ -59,11 +63,11 @@ let parser =
 [<EntryPoint>]
 let main argv =
     getLocalisedMessage None (UtilityMessage VersionMessage)
-|> message (
-    Some
-        { defaultOptions with
-            CustomColor = Some ConsoleColor.DarkCyan }
-)
+    |> message (
+        Some
+            { defaultOptions with
+                CustomColor = Some ConsoleColor.DarkCyan }
+    )
 
     try
         let results = parser.ParseCommandLine(argv)
