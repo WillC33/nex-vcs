@@ -182,7 +182,7 @@ type DiffEngineTests() =
         let textA = "This is a test."
         let textB = "Completely different text."
         let result = diffTextToHunks textA textB
-        Assert.Single(result)
+        Assert.Single(result) |> ignore
         let hunk = result.Head
         Assert.Equal(1, hunk.StartLineA)
         Assert.Equal(1, hunk.StartLineB)
@@ -194,7 +194,7 @@ type DiffEngineTests() =
         let textA = "This is a Test."
         let textB = "This is a test."
         let result = diffTextToHunks textA textB
-        Assert.Single(result)
+        Assert.Single(result) |> ignore
         let hunk = result.Head
         Assert.Equal(1, hunk.StartLineA)
         Assert.Equal(1, hunk.StartLineB)
@@ -206,7 +206,7 @@ type DiffEngineTests() =
         let textA = "This is a test."
         let textB = "This  is a test."
         let result = diffTextToHunks textA textB
-        Assert.Single(result)
+        Assert.Single(result) |> ignore
         let hunk = result.Head
         Assert.Equal(1, hunk.StartLineA)
         Assert.Equal(1, hunk.StartLineB)
@@ -225,7 +225,7 @@ type DiffEngineTests() =
         let textA = "This is a test."
         let textB = ""
         let result = diffTextToHunks textA textB
-        Assert.Single(result)
+        Assert.Single(result) |> ignore
         let hunk = result.Head
         Assert.Equal(1, hunk.StartLineA)
         Assert.Equal(1, hunk.StartLineB)
@@ -236,7 +236,7 @@ type DiffEngineTests() =
         let textA = "Line 1\nLine 2\nLine 3\nLine to change\nLine 5\nLine 6\nLine 7"
         let textB = "Line 1\nLine 2\nLine 3\nChanged line\nLine 5\nLine 6\nLine 7"
         let result = diffTextToHunks textA textB
-        Assert.Single(result)
+        Assert.Single(result) |> ignore
         let hunk = result.Head
         Assert.Equal(1, hunk.StartLineA)
         Assert.Equal(1, hunk.StartLineB)

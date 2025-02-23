@@ -6,6 +6,7 @@ open Newtonsoft.Json
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.Directories
+open DiffEngine
 
 module DiffCore =
 
@@ -160,14 +161,15 @@ module DiffCore =
                 "" // Not yet indexed by nex
 
         let committedContent = getCommittedContent filePath
-match committedContent with
-| "" -> // Treat new files as a single hunk with all lines added
-    [ { StartLineA = 0
-        StartLineB = 0
-        LinesA = 0
-        LinesB = currentContent.Split('\n').Length
-        Lines = currentContent.Split('\n') |> Array.toList |> List.map Added } ]
-| _ -> diffTextToHunks committedContent currentContent
+
+        match committedContent with
+        | "" -> // Treat new files as a single hunk with all lines added
+            [ { StartLineA = 0
+                StartLineB = 0
+                LinesA = 0
+                LinesB = currentContent.Split('\n').Length
+                Lines = currentContent.Split('\n') |> Array.toList |> List.map Added } ]
+        | _ -> diffTextToHunks committedContent currentContent
 
     /// <summary>
     /// Provides a summary diff for the working directory of the nex repository
