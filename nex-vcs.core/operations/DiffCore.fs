@@ -3,7 +3,6 @@ namespace Nex.Core
 open System
 open System.IO
 open Newtonsoft.Json
-open Nex.Core.DiffEngine
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.Directories
@@ -150,16 +149,25 @@ module DiffCore =
     /// <summary>
     /// Provides a hunk diff of a given file
     /// </summary>
-    /// <param name="filePath"></param>
-    let diffFile (filePath: string) =
+    /// <param name="relativeFilePath"></param>
+    let diffFile (relativeFilePath: string) =
+        let filePath = Path.Combine(getWorkingDirectory (), relativeFilePath)
+
         let currentContent =
             if File.Exists(filePath) then
                 File.ReadAllText(filePath)
             else
-                "" //TODO this will need to be an error FileNotFound
+                "" // Not yet indexed by nex
 
         let committedContent = getCommittedContent filePath
-        diffTextToHunks committedContent currentContent
+match committedContent with
+| "" -> // Treat new files as a single hunk with all lines added
+    [ { StartLineA = 0
+        StartLineB = 0
+        LinesA = 0
+        LinesB = currentContent.Split('\n').Length
+        Lines = currentContent.Split('\n') |> Array.toList |> List.map Added } ]
+| _ -> diffTextToHunks committedContent currentContent
 
     /// <summary>
     /// Provides a summary diff for the working directory of the nex repository

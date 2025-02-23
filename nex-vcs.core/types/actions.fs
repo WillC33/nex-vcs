@@ -35,4 +35,6 @@ type CommitAction = | Created
 /// <summary>
 /// Represents general problems within the programme
 /// </summary>
-type FaultAction = | Fatal //Indicates an unrecoverable failure
+type FaultAction =
+    | NoRepo
+    | Fatal //Indicates an unrecoverable failure

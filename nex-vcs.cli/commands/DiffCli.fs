@@ -75,17 +75,20 @@ let displayHunkDiffs (path: string) (hunks: DiffHunk list) =
                     message
                         (Some
                             { defaultOptions with
-                                CustomColor = Some ConsoleColor.Gray })
+                                CustomColor = Some ConsoleColor.Gray
+                                IncludeLineSpace = false })
                         $" {text}"
                 | Added text ->
                     message
                         (Some
                             { defaultOptions with
-                                BackgroundColor = Some ConsoleColor.Green })
+                                CustomColor = Some ConsoleColor.DarkGreen
+                                IncludeLineSpace = false })
                         $"+{text}"
                 | Removed text ->
                     message
                         (Some
                             { defaultOptions with
-                                BackgroundColor = Some ConsoleColor.Red })
+                                BackgroundColor = Some ConsoleColor.Red
+                                IncludeLineSpace = false })
                         $"-{text}"))
