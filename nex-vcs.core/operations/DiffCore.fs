@@ -76,7 +76,13 @@ module DiffCore =
     /// </summary>
     /// <param name="filePath"></param>
     let private getCommittedContent (filePath: string) =
-        let relativeFilePath = Path.Combine(getWorkingDirectory (), filePath)
+        let workingDir = getWorkingDirectory ()
+        // Always work with absolute paths
+        let absoluteFilePath =
+            if Path.IsPathRooted(filePath) then
+                filePath
+            else
+                Path.GetFullPath(filePath, workingDir)
 
         match tryGetNexRepoPath () with
         | None -> ""
@@ -87,7 +93,7 @@ module DiffCore =
                 tryReadCommitObject repoPath commitHash
                 |> Option.bind (fun commit ->
                     commit.files
-                    |> List.tryFind (fun f -> f.path = relativeFilePath)
+                    |> List.tryFind (fun f -> f.path = absoluteFilePath)
                     |> Option.bind (tryReadBlobContent repoPath))
                 |> Option.defaultValue ""
 
