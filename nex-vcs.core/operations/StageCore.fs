@@ -6,6 +6,14 @@ open Nex.Core.DiffCore
 open Nex.Core.Utils.Hashing
 open Nex.Core.Utils.Serialisation
 
+type StageAction =
+    // Indicate success
+    | Staged
+    | Unstaged
+    // Indicate problems with staging
+    | Unchanged
+    | NotFound
+
 module StageCore =
 
     /// Represents a file staged for commit.
@@ -17,20 +25,28 @@ module StageCore =
         Path.Combine(workingDir, ".nex", "stage.bson")
 
     /// Loads the staging area from disk, returning an empty list if none exists.
-    let loadStagingArea (workingDir: string) : StagedEntry list =
-        let file = stagingFile workingDir
+    let loadStagingArea (workingDir: string) : Result<StagedEntry list, string> =
+        try
+            let file = stagingFile workingDir
 
-        if File.Exists(file) then readBson file else []
+            if File.Exists(file) then readBson file else []
+            |> Ok
+        with ex ->
+            Error ex.Message
 
     /// Saves the staging area to disk.
-    let saveStagingArea (workingDir: string) (entries: StagedEntry list) : unit =
-        let file = stagingFile workingDir
-        let dir = Path.GetDirectoryName(file)
+    let saveStagingArea (workingDir: string) (entries: StagedEntry list) : Result<unit, string> =
+        try
+            let file = stagingFile workingDir
+            let dir = Path.GetDirectoryName(file)
 
-        if not (Directory.Exists(dir)) then
-            Directory.CreateDirectory(dir) |> ignore
+            if not (Directory.Exists(dir)) then
+                Directory.CreateDirectory(dir) |> ignore
 
-        writeBson file entries
+            writeBson file entries
+            Ok()
+        with ex ->
+            Error ex.Message
 
     /// Checks whether the file at target (relative or absolute) is changed compared to the committed version.
     /// Returns Some newHash if changed, or None if unchanged.
@@ -68,9 +84,9 @@ module StageCore =
 
     /// Stages a file (or directory, if you extend collectFiles) only if it has changed.
     /// Returns Ok () on success or Error with an explanatory message.
-    let stageFile (workingDir: string) (target: string) : Result<unit, string> =
+    let stageFile (workingDir: string) (target: string) : StageAction =
         match checkFileChanged workingDir target with
-        | None -> Error(sprintf "File '%s' is unchanged; cannot stage." target)
+        | None -> StageAction.Unchanged
         | Some newHash ->
             // Compute a relative path to the working directory.
             let relativePath =
@@ -89,10 +105,20 @@ module StageCore =
                 newEntry :: (current |> List.filter (fun e -> e.FilePath <> relativePath))
 
             saveStagingArea workingDir updated
-            Ok()
+            StageAction.Staged
 
-    /// (Placeholder) You can later add a function to stage an entire folder recursively.
-    let stageFolder (workingDir: string) (folder: string) : Result<unit, string> =
+    let stageFolder (workingDir: string) (folder: string) : StageAction =
         // This could use a recursive file-collection function, then map stageFile over the results.
         // For now, we simply return an error.
-        Error "Recursive staging not implemented yet."
+        failwith "Not implemented"
+
+
+    let stage (workingDir: string) (path: string) : StageAction =
+        if Directory.Exists(path) then
+            match stageFolder workingDir path with
+            | Ok() -> StageAction.Staged
+            | Error _ -> StageAction.Unchanged
+        elif File.Exists(path) then
+            stageFile workingDir path
+        else
+            StageAction.NotFound

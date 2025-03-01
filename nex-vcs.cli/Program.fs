@@ -26,6 +26,8 @@ type LogArgs =
 /// </summary>
 type CliArguments =
     | [<CliPrefix(CliPrefix.None)>] Init of path: string option
+    | [<CliPrefix(CliPrefix.None)>] Up of path: string
+    | [<CliPrefix(CliPrefix.None)>] Down of path: string
     | [<CliPrefix(CliPrefix.None)>] Commit of message: string
     | [<CliPrefix(CliPrefix.None)>] Diff of path: string option
     | [<CliPrefix(CliPrefix.None)>] Checkout of hash: string
@@ -35,6 +37,8 @@ type CliArguments =
         member s.Usage =
             match s with
             | Init _ -> "Initialise a new nex repository in the specified path or current directory"
+            | Up _ -> "Move a file/directory into staging"
+            | Down _ -> "Move a file/directory out of staging"
             | Commit _ -> "Create a new commit with the specified message"
             | Diff _ -> "Show changes between working directory and last commit"
             | Checkout _ -> "Checkout a specific commit by hash"
@@ -105,6 +109,13 @@ let main argv =
             match path with
             | Some p -> DiffCore.diffFile p |> DiffCli.displayHunkDiffs p
             | None -> DiffCore.diffWorkingDirectory () |> DiffCli.displaySummaryDiffs
+
+            0
+
+        | [ Up path ] ->
+            match (StageCore.stageFile path) with
+            | Ok t -> getLocalisedMessage (Some path) (StageResponse t) |> message None
+            | Error e -> getLocalisedMessage (Some path) (UpResponse e) |> error
 
             0
 

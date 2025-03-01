@@ -26,6 +26,7 @@ type UtilityMessage = | VersionMessage
 type Message =
     | InitResponse of InitAction
     | CommitResponse of CommitAction
+    | StageResponse of StageAction
     | DiffResponse of DiffAction
     | UtilityMessage of UtilityMessage
     | FaultResponse of FaultAction
