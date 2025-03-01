@@ -10,6 +10,7 @@ open Nex.Core.Utils.Directories
 open Nex.Core.Utils.Hashing
 
 module Commit =
+    open Nex.Core.Utils.Serialisation
 
     /// <summary>
     /// Writes the blob to the objects directory if it doesn't already exist.
@@ -31,21 +32,18 @@ module Commit =
     /// <param name="repoPath">the path of the nex repository</param>
     /// <param name="commitObj">the commit metadata object</param>
     let private writeCommit repoPath commitObj =
-        // First, serialise the commit object without the id set.
-        let json = JsonConvert.SerializeObject(commitObj)
+        let json = Newtonsoft.Json.JsonConvert.SerializeObject(commitObj)
         let bytes = Encoding.UTF8.GetBytes(json)
-        let header = $"commit %d{bytes.Length}\u0000"
+        let header = sprintf "commit %d\u0000" bytes.Length
         let headerBytes = Encoding.UTF8.GetBytes(header)
         let fullBytes = Array.append headerBytes bytes
         let commitHash = toHash fullBytes
 
-        // Now create a new commit object with the computed id.
         let updatedCommit = { commitObj with id = commitHash }
-        let updatedJson = JsonConvert.SerializeObject(updatedCommit)
-        let commitPath = Path.Combine($"{repoPath}/objects", commitHash)
+        let commitFilePath = Path.Combine(sprintf "%s/objects" repoPath, commitHash)
 
-        if not (File.Exists(commitPath)) then
-            File.WriteAllBytes(commitPath, Encoding.UTF8.GetBytes(updatedJson))
+        if not (File.Exists(commitFilePath)) then
+            writeBson commitFilePath updatedCommit
 
         commitHash
 

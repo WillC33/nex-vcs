@@ -5,6 +5,7 @@ open System.IO
 open Nex.Core
 open Nex.Core.Types
 open Xunit
+open Nex.Core.Utils.Serialisation
 
 type DiffCoreTests() =
     let mutable originalWorkingDir = ""
@@ -53,7 +54,7 @@ language = "EN"
         File.WriteAllText(Path.Combine(testRepoDir, "refs", "HEAD"), id)
 
         let commitPath = Path.Combine(testRepoDir, "objects", id)
-        File.WriteAllText(commitPath, Newtonsoft.Json.JsonConvert.SerializeObject(commitObj))
+        writeBson commitPath commitObj
 
     let createBlob (hash: string) (content: string) =
         let blobPath = Path.Combine(testRepoDir, "objects", hash)

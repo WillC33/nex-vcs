@@ -2,11 +2,11 @@ namespace Nex.Core
 
 open System
 open System.IO
-open Newtonsoft.Json
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 
 module Log =
+    open Nex.Core.Utils.Serialisation
 
     /// Represents a file entry in a commit.
     /// Reads and deserializes a commit object from the objects directory.
@@ -17,8 +17,7 @@ module Log =
         if not (File.Exists(commitPath)) then
             failwithf $"Commit %s{commitHash} does not exist."
         else
-            let json = File.ReadAllText(commitPath)
-            JsonConvert.DeserializeObject<CommitObj>(json)
+            readBson commitPath
 
     /// Recursively builds a list of commits starting from the given commit hash.
     let rec private getCommitHistory (commitHash: string) : CommitObj list =

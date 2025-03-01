@@ -18,7 +18,7 @@ module InitCore =
         try
             Directory.CreateDirectory(path) |> ignore
             Ok()
-        with ex ->
+        with _ ->
             Error DirectoryCreateFailed
 
     /// <summary>
@@ -30,7 +30,7 @@ module InitCore =
         try
             File.WriteAllText(path, content)
             Ok()
-        with ex ->
+        with _ ->
             Error DirectoryCreateFailed
 
     /// <summary>
@@ -52,7 +52,7 @@ module InitCore =
         try
             Config.initConfig configFile workingDir
             Ok()
-        with ex ->
+        with _ ->
             Error ConfigWriteFailed
 
     /// <summary>
@@ -65,16 +65,16 @@ module InitCore =
     let initRepo (workingDirOpt: string option) : Result<InitAction, InitAction> =
         let createPaths workingDir =
             let repositoryDir = Path.Combine(workingDir, ".nex")
-    
+
             {| Repository = repositoryDir
                Objects = Path.Combine(repositoryDir, "objects")
                Refs = Path.Combine(repositoryDir, "refs")
                Head = Path.Combine(repositoryDir, "refs/HEAD")
                Config = Path.Combine(repositoryDir, "config.toml") |}
-    
+
         let workingDir = fetchInitDir workingDirOpt
         let paths = createPaths workingDir
-        
+
         checkRepositoryExists paths.Repository
         |> Result.bind (fun _ -> ensureDirectory paths.Repository)
         |> Result.bind (fun _ -> ensureDirectory paths.Objects)
@@ -82,3 +82,4 @@ module InitCore =
         |> Result.bind (fun _ -> ensureFileWrite paths.Head "")
         |> Result.bind (fun _ -> ensureWriteConfig paths.Config workingDir)
         |> Result.map (fun _ -> RepositoryCreated)
+

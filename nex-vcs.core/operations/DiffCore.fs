@@ -2,13 +2,13 @@ namespace Nex.Core
 
 open System
 open System.IO
-open Newtonsoft.Json
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.Directories
 open DiffEngine
 
 module DiffCore =
+    open Nex.Core.Utils.Serialisation
 
     /// We will always ignore these...
     let private standardIgnores = [ ".nex"; ".nexlink" ]
@@ -51,8 +51,7 @@ module DiffCore =
 
         if File.Exists(objectPath) then
             try
-                let commitJson = File.ReadAllText(objectPath)
-                Some(JsonConvert.DeserializeObject<CommitObj>(commitJson))
+                Some(readBson<CommitObj> objectPath)
             with _ ->
                 None
         else
@@ -75,7 +74,7 @@ module DiffCore =
     /// Fetches the commited content at HEAD for a given file in the working directory
     /// </summary>
     /// <param name="filePath"></param>
-    let private getCommittedContent (filePath: string) =
+    let getCommittedContent (filePath: string) =
         let workingDir = getWorkingDirectory ()
         // Always work with absolute paths
         let absoluteFilePath =

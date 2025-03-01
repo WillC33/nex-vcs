@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <Compile Include="utils\version.fs"/>
+        <Compile Include="utils\serialisation.fs"/>
         <Compile Include="utils\directory-management.fs"/>
         <Compile Include="utils\configuration.fs"/>
         <Compile Include="utils\hashing.fs"/>
@@ -30,6 +31,7 @@
         <Compile Include="operations\checkout.fs"/>
         <Compile Include="operations\commit.fs"/>
         <Compile Include="operations\DiffCore.fs"/>
+        <Compile Include="operations\StageCore.fs"/>
     </ItemGroup>
 
     <ItemGroup>

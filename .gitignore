@@ -4,3 +4,9 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .DS_Store
+
+nex-vcs.cli/.nvim-dap.lua
+nex-vcs.cli/.debug_target
+.netcoredbg_hist
+
+nex-vcs.tests/TestResults/

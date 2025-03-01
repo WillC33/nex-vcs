@@ -1,8 +1,9 @@
-﻿module Nex.Core.Main
+﻿module Nex.Cli.Main
 
 open System
 open Argu
 open Nex.Cli
+open Nex.Core
 open Nex.Core.Types
 open Nex.Core.Utils
 open Nex.Core.Utils.Locale
