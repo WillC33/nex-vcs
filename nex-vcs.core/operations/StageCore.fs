@@ -7,34 +7,37 @@ open Nex.Core.Utils.Hashing
 open Nex.Core.Utils.Serialisation
 
 type StageAction =
-    // Indicate success
     | Staged
     | Unstaged
-    // Indicate problems with staging
     | Unchanged
     | NotFound
 
 module StageCore =
-
-    /// Represents a file staged for commit.
     [<CLIMutable>]
     type StagedEntry = { FilePath: string; Hash: string }
 
-    /// Computes the path of the staging file given a working directory.
-    let stagingFile (workingDir: string) : string =
+    let private compareHashes (newHash: string) (committedHash: string option) =
+        match committedHash with
+        | Some hash -> hash = newHash
+        | None -> false
+
+    let private resolveFilePath (workingDir: string) (target: string) =
+        if Path.IsPathRooted(target) then
+            target
+        else
+            Path.Combine(workingDir, target)
+
+    // IO operations
+    let stagingFile (workingDir: string) =
         Path.Combine(workingDir, ".nex", "stage.bson")
 
-    /// Loads the staging area from disk, returning an empty list if none exists.
     let loadStagingArea (workingDir: string) : Result<StagedEntry list, string> =
         try
             let file = stagingFile workingDir
-
-            if File.Exists(file) then readBson file else []
-            |> Ok
+            if File.Exists(file) then readBson file |> Ok else Ok []
         with ex ->
             Error ex.Message
 
-    /// Saves the staging area to disk.
     let saveStagingArea (workingDir: string) (entries: StagedEntry list) : Result<unit, string> =
         try
             let file = stagingFile workingDir
@@ -48,47 +51,39 @@ module StageCore =
         with ex ->
             Error ex.Message
 
-    /// Checks whether the file at target (relative or absolute) is changed compared to the committed version.
-    /// Returns Some newHash if changed, or None if unchanged.
-    let checkFileChanged (workingDir: string) (target: string) : string option =
-        let absoluteFile =
-            if Path.IsPathRooted(target) then
-                target
-            else
-                Path.Combine(workingDir, target)
+    let private readFileContent (path: string) : Result<byte[], string> =
+        try
+            File.ReadAllBytes path |> Ok
+        with ex ->
+            Error $"Failed to read file: {ex.Message}"
 
-        if not (File.Exists(absoluteFile)) then
-            None
+    let checkFileChanged (workingDir: string) (target: string) : Result<string option, string> =
+        let absoluteFile = resolveFilePath workingDir target
+
+        if not (File.Exists absoluteFile) then
+            Ok None
         else
-            let content = File.ReadAllBytes(absoluteFile)
-            let newHash = computeBlobHash content
-            let committedContent = getCommittedContent absoluteFile
+            readFileContent absoluteFile
+            |> Result.map (fun content ->
+                let newHash = computeBlobHash content
+                let committedContent = getCommittedContent absoluteFile
 
-            let committedHash =
-                if String.IsNullOrWhiteSpace(committedContent) then
+                let committedHash =
+                    if String.IsNullOrWhiteSpace committedContent then
+                        None
+                    else
+                        committedContent |> System.Text.Encoding.UTF8.GetBytes |> computeBlobHash |> Some
+
+                if compareHashes newHash committedHash then
                     None
                 else
-                    let bytes = System.Text.Encoding.UTF8.GetBytes(committedContent)
+                    Some newHash)
 
-                    Some(
-                        toHash (
-                            Array.append
-                                (System.Text.Encoding.UTF8.GetBytes(sprintf "blob %d\u0000" bytes.Length))
-                                bytes
-                        )
-                    )
-
-            match committedHash with
-            | Some h when h = newHash -> None
-            | _ -> Some newHash
-
-    /// Stages a file (or directory, if you extend collectFiles) only if it has changed.
-    /// Returns Ok () on success or Error with an explanatory message.
     let stageFile (workingDir: string) (target: string) : StageAction =
         match checkFileChanged workingDir target with
-        | None -> StageAction.Unchanged
-        | Some newHash ->
-            // Compute a relative path to the working directory.
+        | Error _ -> StageAction.NotFound
+        | Ok None -> StageAction.Unchanged
+        | Ok(Some newHash) ->
             let relativePath =
                 if Path.IsPathRooted(target) then
                     Path.GetRelativePath(workingDir, target)
@@ -96,29 +91,59 @@ module StageCore =
                     target
 
             let newEntry =
-                { StagedEntry.FilePath = relativePath
+                { FilePath = relativePath
                   Hash = newHash }
 
-            let current = loadStagingArea workingDir
-            // Replace any existing entry for the same file.
-            let updated =
-                newEntry :: (current |> List.filter (fun e -> e.FilePath <> relativePath))
+            match loadStagingArea workingDir with
+            | Error _ -> StageAction.NotFound
+            | Ok current ->
+                let updated =
+                    newEntry :: (current |> List.filter (fun e -> e.FilePath <> relativePath))
 
-            saveStagingArea workingDir updated
-            StageAction.Staged
+                match saveStagingArea workingDir updated with
+                | Ok _ -> StageAction.Staged
+                | Error _ -> StageAction.NotFound
 
-    let stageFolder (workingDir: string) (folder: string) : StageAction =
-        // This could use a recursive file-collection function, then map stageFile over the results.
-        // For now, we simply return an error.
-        failwith "Not implemented"
+    let private collectFiles (baseDir: string) : Result<string list, string> =
+        try
+            let rec getFiles dir =
+                seq {
+                    yield! Directory.GetFiles(dir)
 
+                    for subDir in Directory.GetDirectories(dir) do
+                        yield! getFiles subDir
+                }
 
-    let stage (workingDir: string) (path: string) : StageAction =
-        if Directory.Exists(path) then
-            match stageFolder workingDir path with
-            | Ok() -> StageAction.Staged
-            | Error _ -> StageAction.Unchanged
-        elif File.Exists(path) then
-            stageFile workingDir path
+            getFiles baseDir |> Seq.toList |> Ok
+        with ex ->
+            Error $"Failed to collect files: {ex.Message}"
+
+    let stageFolder (workingDir: string) (folder: string) : Result<StageAction, StageAction> =
+        result {
+            let absoluteFolder = resolveFilePath workingDir folder
+            let! files = collectFiles absoluteFolder
+
+            let stageResults =
+                files |> List.map (fun file -> stageFile workingDir file) |> List.distinct
+
+            return
+                match stageResults with
+                | [] -> StageAction.NotFound
+                | results when List.contains StageAction.Staged results -> StageAction.Staged
+                | results when List.forall ((=) StageAction.Unchanged) results -> StageAction.Unchanged
+                | _ -> StageAction.NotFound
+        }
+        |> Result.mapError (fun _ -> StageAction.NotFound)
+
+    let stage (workingDir: string) (path: string) : Result<StageAction, StageAction> =
+        if String.IsNullOrWhiteSpace path then
+            Error StageAction.NotFound
         else
-            StageAction.NotFound
+            let absolutePath = resolveFilePath workingDir path
+
+            if Directory.Exists absolutePath then
+                stageFolder workingDir absolutePath
+            elif File.Exists absolutePath then
+                Ok(stageFile workingDir absolutePath)
+            else
+                Ok StageAction.NotFound

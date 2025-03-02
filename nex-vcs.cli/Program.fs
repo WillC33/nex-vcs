@@ -113,7 +113,7 @@ let main argv =
             0
 
         | [ Up path ] ->
-            match (StageCore.stageFile path) with
+            match (StageCore.stage path) with
             | Ok t -> getLocalisedMessage (Some path) (StageResponse t) |> message None
             | Error e -> getLocalisedMessage (Some path) (UpResponse e) |> error
 
