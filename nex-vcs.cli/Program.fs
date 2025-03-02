@@ -114,8 +114,8 @@ let main argv =
 
         | [ Up path ] ->
             match (StageCore.stage path) with
-            | Ok t -> getLocalisedMessage (Some path) (StageResponse t) |> message None
-            | Error e -> getLocalisedMessage (Some path) (UpResponse e) |> error
+            | Ok res -> getLocalisedMessage (Some path) (StageResponse res) |> message None
+            | Error err -> getLocalisedMessage (Some path) (StageResponse err) |> error
 
             0
 

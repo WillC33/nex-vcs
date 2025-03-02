@@ -32,6 +32,16 @@ type DiffAction =
 /// </summary>
 type CommitAction = | Created
 
+
+/// <summary>
+/// Represents the outcomes of staging actions
+/// </summary>
+type StageAction =
+    | Staged
+    | Unstaged
+    | Unchanged
+    | NotFound
+
 /// <summary>
 /// Represents general problems within the programme
 /// </summary>
