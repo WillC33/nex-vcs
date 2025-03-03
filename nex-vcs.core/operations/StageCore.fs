@@ -12,7 +12,7 @@ open Nex.Core.Utils.Serialisation
 
 module StageCore =
     [<CLIMutable>]
-    type private StagedEntry = { FilePath: string; Hash: string }
+    type StagedEntry = { FilePath: string; Hash: string }
 
     let private compareHashes (newHash: string) (committedHash: string option) =
         match committedHash with
@@ -44,7 +44,7 @@ module StageCore =
             if not (Directory.Exists(dir)) then
                 Directory.CreateDirectory(dir) |> ignore
 
-            writeBson file entries
+            writeBson<StagedEntry[]> file (entries |> List.toArray)
             Ok()
         with ex ->
             Error ex.Message
@@ -95,7 +95,9 @@ module StageCore =
             Error $"Failed to collect files: {ex.Message}"
 
     let private writeToStaging workingDir (entries: StagedEntry list) =
-        loadStagingArea workingDir
+        let stage = loadStagingArea workingDir
+
+        stage
         |> Result.bind (fun existing ->
             existing
             |> List.filter (fun e -> not (List.exists (fun n -> n.FilePath = e.FilePath) entries))
@@ -150,3 +152,8 @@ module StageCore =
                 stageFile workingDir absolutePath |> Ok
             else
                 Error StageAction.NotFound
+
+    let status =
+        match loadStagingArea <| getWorkingDirectory () with
+        | Ok stage -> stage
+        | Error _ -> []

@@ -28,6 +28,7 @@ type CliArguments =
     | [<CliPrefix(CliPrefix.None)>] Init of path: string option
     | [<CliPrefix(CliPrefix.None)>] Up of path: string
     | [<CliPrefix(CliPrefix.None)>] Down of path: string
+    | [<CliPrefix(CliPrefix.None)>] Status
     | [<CliPrefix(CliPrefix.None)>] Commit of message: string
     | [<CliPrefix(CliPrefix.None)>] Diff of path: string option
     | [<CliPrefix(CliPrefix.None)>] Checkout of hash: string
@@ -39,6 +40,7 @@ type CliArguments =
             | Init _ -> "Initialise a new nex repository in the specified path or current directory"
             | Up _ -> "Move a file/directory into staging"
             | Down _ -> "Move a file/directory out of staging"
+            | Status -> "Shows the staus of staged files"
             | Commit _ -> "Create a new commit with the specified message"
             | Diff _ -> "Show changes between working directory and last commit"
             | Checkout _ -> "Checkout a specific commit by hash"
@@ -117,6 +119,9 @@ let main argv =
             | Ok res -> getLocalisedMessage (Some path) (StageResponse res) |> message None
             | Error err -> getLocalisedMessage (Some path) (StageResponse err) |> error
 
+            0
+        | [ Status ] ->
+            StageCore.status |> List.iter (fun item -> printf $"%s{item.FilePath}")
             0
 
         | [ Checkout hash ] ->

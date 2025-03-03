@@ -24,5 +24,6 @@ let writeBson<'T> (path: string) (data: 'T) =
 let readBson<'T> (path: string) : 'T =
     use fs = new FileStream(path, FileMode.Open, FileAccess.Read)
     use reader = new BsonDataReader(fs)
+    reader.ReadRootValueAsArray <- true
     let serialiser = JsonSerializer()
     serialiser.Deserialize<'T>(reader)
