@@ -4,7 +4,7 @@ open System
 open System.IO
 open Nex.Core.Types
 open Nex.Core.Utils.Config
-open Nex.Core.Utils.Directories
+open Nex.Core.Utils.NexDirectory
 open DiffEngine
 
 module DiffCore =
@@ -75,14 +75,6 @@ module DiffCore =
     /// </summary>
     /// <param name="filePath"></param>
     let getCommittedContent (filePath: string) =
-        let workingDir = getWorkingDirectory ()
-        // Always work with absolute paths
-        let absoluteFilePath =
-            if Path.IsPathRooted(filePath) then
-                filePath
-            else
-                Path.GetFullPath(filePath, workingDir)
-
         match tryGetNexRepoPath () with
         | None -> ""
         | Some repoPath ->
@@ -92,7 +84,7 @@ module DiffCore =
                 tryReadCommitObject repoPath commitHash
                 |> Option.bind (fun commit ->
                     commit.files
-                    |> List.tryFind (fun f -> f.path = absoluteFilePath)
+                    |> List.tryFind (fun f -> f.path = filePath)
                     |> Option.bind (tryReadBlobContent repoPath))
                 |> Option.defaultValue ""
 

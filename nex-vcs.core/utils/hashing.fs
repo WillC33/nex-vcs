@@ -1,7 +1,7 @@
 module Nex.Core.Utils.Hashing
 
-open System.Security.Cryptography
 open System.Text
+open Standart.Hash.xxHash
 
 /// <summary>
 /// Creates a header for a nex blob object
@@ -15,8 +15,7 @@ let createBlobHeader size =
 /// </summary>
 /// <param name="input">A byte array to hash</param>
 let toHash (input: byte[]) =
-    use sha = SHA1.Create()
-    sha.ComputeHash(input) |> Array.map _.ToString("x2") |> String.concat ""
+    xxHash3.ComputeHash(input, input.Length) |> _.ToString("x2")
 
 /// <summary>
 /// Computes a blob hash using a header "blob <size>\0".

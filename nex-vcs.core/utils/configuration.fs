@@ -3,7 +3,7 @@ namespace Nex.Core.Utils
 open System.Globalization
 open System.IO
 open Nex.Core.Types
-open Nex.Core.Utils.Directories
+open Nex.Core.Utils.NexDirectory
 open Tomlyn
 
 module Config =
@@ -54,7 +54,7 @@ language = "{language}"
 
     /// Gets the working directory
     let getWorkingDirectory () =
-        getConfigProp _.WorkingDirectory |> Result.defaultValue "./"
+        getConfigProp _.WorkingDirectory |> Result.defaultValue ".."
 
     /// Gets the language
     let getLanguage () =

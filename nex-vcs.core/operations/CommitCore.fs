@@ -1,15 +1,12 @@
 namespace Nex.Core
 
-open System
 open System.IO
 open System.Text
-open Newtonsoft.Json
 open Nex.Core.Types
-open Nex.Core.Utils
-open Nex.Core.Utils.Directories
+open Nex.Core.Utils.NexDirectory
 open Nex.Core.Utils.Hashing
 
-module Commit =
+module CommitCore =
     open Nex.Core.Utils.Serialisation
 
     /// <summary>
@@ -47,8 +44,8 @@ module Commit =
 
         commitHash
 
-    /// Registers a commit for a single file "code.txt" with the given commit message.
-    let commitSingleFile (message: string) =
+    /// Registers a commit from the staged files with the given commit message.
+    let commitFromStaging (message: string) =
         let repoPath =
             match tryGetNexRepoPath () with
             | Some p -> p
@@ -56,37 +53,49 @@ module Commit =
                 failwith
                     "No nex repository could be located for the commit. Does your folder contain a .nex folder or .nexlink?"
 
-        let workingDir = Config.getWorkingDirectory ()
-        let filePath = Path.Combine(workingDir, "new.js")
+        let stageFile = Path.Combine(repoPath, "stage.bson")
 
-        if not (File.Exists(filePath)) then
-            failwith "File 'code.txt' does not exist."
+        if not (File.Exists(stageFile)) then
+            failwith "No staged files found."
 
-        let content = File.ReadAllBytes(filePath)
-        let blobHash = computeBlobHash content
-        writeBlob repoPath blobHash content
+        let stagedEntries =
+    match StageCore.loadStagingArea stageFile with
+    | Ok entries -> entries
+    | Error _ -> failwith "Failed to load staging area."
 
-        let fileEntry = { path = filePath; hash = blobHash }
-        let headPath = $"{repoPath}/refs/HEAD"
+        if List.isEmpty stagedEntries then
+            printfn "No files to commit."
+        else
+            let fileEntries =
+                stagedEntries
+                |> List.map (fun entry ->
+                    let absolutePath = Path.Combine(repoPath, "../", entry.FilePath)
+                    let content = File.ReadAllBytes(absolutePath)
+                    writeBlob repoPath entry.Hash content
 
-        let parent =
-            if File.Exists(headPath) then
-                let parentHash = File.ReadAllText(headPath).Trim()
-                if parentHash = "" then None else Some parentHash
-            else
-                None
+                    { path = entry.FilePath
+                      hash = entry.Hash })
 
-        // Create the commit object with an empty id; it will be updated in writeCommit.
-        let commitObj: CommitObj =
-            { id = ""
-              parent = parent
-              message = message
-              timestamp = DateTime.UtcNow
-              files = [ fileEntry ] }
+            let headPath = $"{repoPath}/refs/HEAD"
 
-        let commitHash = writeCommit repoPath commitObj
+            let parent =
+                if File.Exists(headPath) then
+                    let parentHash = File.ReadAllText(headPath).Trim()
+                    if parentHash = "" then None else Some parentHash
+                else
+                    None
 
-        // Update HEAD to point to the new commit.
-        File.WriteAllText(headPath, commitHash)
+            // Create the commit object with an empty id; it will be updated in writeCommit.
+            let commitObj: CommitObj =
+                { id = ""
+                  parent = parent
+                  message = message
+                  timestamp = DateTime.UtcNow
+                  files = fileEntries }
 
-        printfn $"Created commit: %s{commitHash}"
+            let commitHash = writeCommit repoPath commitObj
+
+            // Update HEAD to point to the new commit.
+            File.WriteAllText(headPath, commitHash)
+
+            printfn $"Created commit: %s{commitHash}"

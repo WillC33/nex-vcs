@@ -3,7 +3,8 @@ namespace Nex.Core
 open System.IO
 open Nex.Core.Types
 open Nex.Core.Utils
-open Nex.Core.Utils.Directories
+open Nex.Core.Utils.FileResolver
+open Nex.Core.Utils.NexDirectory
 
 /// <summary>
 /// Core logic for initialising a nex repository in a given directory
@@ -72,14 +73,15 @@ module InitCore =
                Head = Path.Combine(repositoryDir, "refs/HEAD")
                Config = Path.Combine(repositoryDir, "config.toml") |}
 
-        let workingDir = fetchInitDir workingDirOpt
-        let paths = createPaths workingDir
+        let workingDir = resolvePaths <| fetchInitDir workingDirOpt
+        let paths = createPaths workingDir.RelativePath
 
         checkRepositoryExists paths.Repository
         |> Result.bind (fun _ -> ensureDirectory paths.Repository)
         |> Result.bind (fun _ -> ensureDirectory paths.Objects)
         |> Result.bind (fun _ -> ensureDirectory paths.Refs)
         |> Result.bind (fun _ -> ensureFileWrite paths.Head "")
-        |> Result.bind (fun _ -> ensureWriteConfig paths.Config workingDir)
+        |> Result.bind (fun _ ->
+            ensureWriteConfig paths.Config
+            <| Path.GetRelativePath(paths.Repository, workingDir.AbsolutePath))
         |> Result.map (fun _ -> RepositoryCreated)
-

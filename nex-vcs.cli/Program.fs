@@ -40,7 +40,7 @@ type CliArguments =
             | Init _ -> "Initialise a new nex repository in the specified path or current directory"
             | Up _ -> "Move a file/directory into staging"
             | Down _ -> "Move a file/directory out of staging"
-            | Status -> "Shows the staus of staged files"
+            | Status -> "Shows the status of staged files"
             | Commit _ -> "Create a new commit with the specified message"
             | Diff _ -> "Show changes between working directory and last commit"
             | Checkout _ -> "Checkout a specific commit by hash"
@@ -81,7 +81,7 @@ let main argv =
 
         match results.GetAllResults() with
         | [ Init path ] ->
-            let resolvedPath = defaultArg path "./" // Use current directory if no path provided
+            let resolvedPath = defaultArg path "." // Use current directory if no path provided
 
             match InitCore.initRepo (Some resolvedPath) with
             | Ok t -> getLocalisedMessage (Some resolvedPath) (InitResponse t) |> message None
@@ -102,7 +102,7 @@ let main argv =
 
         | [ Commit message ] ->
             printfn $"Committing with message: %s{message}"
-            Commit.commitSingleFile message
+            CommitCore.commitFromStaging message
             0
 
         | [ Diff path ] ->
@@ -120,8 +120,16 @@ let main argv =
             | Error err -> getLocalisedMessage (Some path) (StageResponse err) |> error
 
             0
+
+        | [ Down path ] ->
+            match (StageCore.unstage path) with
+            | Ok res -> getLocalisedMessage (Some path) (StageResponse res) |> message None
+            | Error err -> getLocalisedMessage (Some path) (StageResponse err) |> error
+
+            0
+
         | [ Status ] ->
-            StageCore.status |> List.iter (fun item -> printf $"%s{item.FilePath}")
+            StageCore.stageStatus |> List.iter (fun item -> printf $"%s{item.FilePath}")
             0
 
         | [ Checkout hash ] ->

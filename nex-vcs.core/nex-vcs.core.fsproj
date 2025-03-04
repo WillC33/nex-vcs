@@ -15,10 +15,11 @@
     <ItemGroup>
         <Compile Include="utils\version.fs"/>
         <Compile Include="utils\serialisation.fs"/>
-        <Compile Include="utils\directory-management.fs"/>
+        <Compile Include="utils\NexDirectoryManagement.fs"/>
         <Compile Include="utils\configuration.fs"/>
         <Compile Include="utils\hashing.fs"/>
-        <Compile Include="utils\localisation.fs"/>
+        <Compile Include="utils\Localisation.fs"/>
+        <Compile Include="utils\FileResolver.fs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -29,16 +30,18 @@
         <Compile Include="operations\InitCore.fs"/>
         <Compile Include="operations\log.fs"/>
         <Compile Include="operations\checkout.fs"/>
-        <Compile Include="operations\commit.fs"/>
         <Compile Include="operations\DiffCore.fs"/>
         <Compile Include="operations\StageCore.fs"/>
+        <Compile Include="operations\CommitCore.fs"/>
+
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
         <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.3"/>
+        <PackageReference Include="Standart.Hash.xxHash" Version="4.0.5"/>
         <PackageReference Include="Tomlyn" Version="0.18.0"/>
-        <PackageReference Update="FSharp.Core" Version="9.0.201" />
+        <PackageReference Update="FSharp.Core" Version="9.0.201"/>
     </ItemGroup>
 
 </Project>

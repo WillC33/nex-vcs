@@ -1,12 +1,6 @@
 namespace Nex.Core
 
-open System
 open System.IO
-open Nex.Core.DiffCore
-open Nex.Core.Types
-open Nex.Core.Utils.Config
-open Nex.Core.Utils.Hashing
-open Nex.Core.Utils.Serialisation
 
 
 
@@ -23,22 +17,21 @@ module StageCore =
         if Path.IsPathRooted(target) then
             target
         else
-            Path.Combine(workingDir, target)
+            let path = Path.Combine(workingDir, target)
+Path.GetFullPath path
 
     // IO operations
-    let private stagingFile (workingDir: string) =
+    let stagingFile (workingDir: string) =
         Path.Combine(workingDir, ".nex", "stage.bson")
 
-    let private loadStagingArea (workingDir: string) : Result<StagedEntry list, string> =
+    let loadStagingArea (file: string) : Result<StagedEntry list, string> =
         try
-            let file = stagingFile workingDir
             if File.Exists(file) then readBson file |> Ok else Ok []
         with ex ->
             Error ex.Message
 
-    let private saveStagingArea (workingDir: string) (entries: StagedEntry list) : Result<unit, string> =
+    let private saveStagingArea (file: string) (entries: StagedEntry list) : Result<unit, string> =
         try
-            let file = stagingFile workingDir
             let dir = Path.GetDirectoryName(file)
 
             if not (Directory.Exists(dir)) then
@@ -55,16 +48,14 @@ module StageCore =
         with ex ->
             Error $"Failed to read file: {ex.Message}"
 
-    let checkFileChanged (workingDir: string) (target: string) : Result<string option, string> =
-        let absoluteFile = resolveFilePath workingDir target
-
-        if not (File.Exists absoluteFile) then
+    let checkFileChanged (target: string) : Result<string option, string> =
+        if not (File.Exists target) then
             Ok None
         else
-            readFileContent absoluteFile
+            readFileContent target
             |> Result.map (fun content ->
                 let newHash = computeBlobHash content
-                let committedContent = getCommittedContent absoluteFile
+                let committedContent = getCommittedContent target
 
                 let committedHash =
                     if String.IsNullOrWhiteSpace committedContent then
@@ -106,7 +97,7 @@ module StageCore =
         |> ignore
 
     let private stageFile (workingDir: string) (target: string) : StageAction =
-        let changed = checkFileChanged workingDir target
+        let changed = checkFileChanged target
 
         match changed with
         | Ok(Some hash) ->
@@ -124,7 +115,7 @@ module StageCore =
         collectFiles absoluteFolder
         |> Result.map (
             List.choose (fun file ->
-                match checkFileChanged workingDir file with
+                match checkFileChanged file with
                 | Ok(Some hash) ->
                     Some
                         { FilePath = Path.GetRelativePath(workingDir, file)
@@ -153,7 +144,56 @@ module StageCore =
             else
                 Error StageAction.NotFound
 
-    let status =
+
+    // Unstage a single file
+    let private unstageFile (workingDir: string) (target: string) : StageAction =
+        let relativePath = Path.GetRelativePath(workingDir, target)
+        let stage = loadStagingArea workingDir
+
+        match stage with
+        | Ok entries ->
+            let updatedEntries = List.filter (fun e -> e.FilePath <> relativePath) entries
+
+            match saveStagingArea workingDir updatedEntries with
+            | Ok _ -> StageAction.Unstaged
+            | Error _ -> StageAction.NotFound
+        | Error _ -> StageAction.NotFound
+
+    // Unstage all files in a folder
+    let private unstageFolder (workingDir: string) (folder: string) : Result<StageAction, StageAction> =
+        let absoluteFolder = resolveFilePath workingDir folder
+        let stage = loadStagingArea workingDir
+
+        match stage with
+        | Ok entries ->
+            let updatedEntries =
+                List.filter
+                    (fun e -> not (e.FilePath.StartsWith(Path.GetRelativePath(workingDir, absoluteFolder))))
+                    entries
+
+            match saveStagingArea workingDir updatedEntries with
+            | Ok _ -> Ok StageAction.Unstaged
+            | Error _ -> Error StageAction.NotFound
+        | Error _ -> Error StageAction.NotFound
+
+    // Unstage a file or folder
+    let unstage (path: string) : Result<StageAction, StageAction> =
+        let workingDir = getWorkingDirectory ()
+
+        if String.IsNullOrWhiteSpace path then
+            Error StageAction.NotFound
+        else
+            let absolutePath = resolveFilePath workingDir path
+
+            if Directory.Exists absolutePath then
+                unstageFolder workingDir absolutePath
+                |> Result.mapError (fun _ -> StageAction.NotFound)
+            elif File.Exists absolutePath then
+                unstageFile workingDir absolutePath |> Ok
+            else
+                Error StageAction.NotFound
+
+    let stageStatus =
         match loadStagingArea <| getWorkingDirectory () with
         | Ok stage -> stage
         | Error _ -> []

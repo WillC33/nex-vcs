@@ -12,7 +12,7 @@ type InitAction =
     | ConfigWriteFailed
 
 /// <summary>
-/// Represents the actions
+/// Represents the actions that can be returned from diff operations
 /// </summary>
 type DiffAction =
     // Feedback
