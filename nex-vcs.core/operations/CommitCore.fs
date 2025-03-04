@@ -1,5 +1,6 @@
 namespace Nex.Core
 
+open System
 open System.IO
 open System.Text
 open Nex.Core.Types
@@ -59,9 +60,9 @@ module CommitCore =
             failwith "No staged files found."
 
         let stagedEntries =
-    match StageCore.loadStagingArea stageFile with
-    | Ok entries -> entries
-    | Error _ -> failwith "Failed to load staging area."
+            match StageCore.loadStagingArea with
+            | Ok entries -> entries
+            | Error _ -> failwith "Failed to load staging area."
 
         if List.isEmpty stagedEntries then
             printfn "No files to commit."

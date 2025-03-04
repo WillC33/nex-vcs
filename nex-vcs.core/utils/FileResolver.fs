@@ -4,6 +4,13 @@ open System.IO
 open Nex.Core.Utils.NexDirectory
 
 /// <summary>
+/// Defines a path set with an absolute and repo relative paths
+/// </summary>
+type PathSet =
+    { AbsolutePath: string
+      RelativePath: string }
+
+/// <summary>
 /// Resolves a given file path to an absolute path, using the working directory
 /// if the provided path is relative.
 /// </summary>
@@ -31,7 +38,7 @@ let getRelativePathFromRepo (absolutePath: string) : string =
 let getRelativePathFromNex (absolutePath: string) : string =
     match tryGetNexRepoPath () with
     | Some dir -> Path.GetRelativePath(dir, absolutePath)
-    | None -> failwith "Desastro"
+    | None -> failwith "Could not get .nex"
 
 /// <summary>
 /// Resolves both the absolute and relative paths for a given target.
@@ -40,13 +47,9 @@ let getRelativePathFromNex (absolutePath: string) : string =
 /// <returns>
 /// A tuple containing the absolute path and the relative path with respect to the working directory.
 /// </returns>
-let resolvePaths
-    (target: string)
-    : {| AbsolutePath: string
-         RelativePath: string |}
-    =
+let resolvePaths (target: string) : PathSet =
     let absolutePath = getAbsPath target
     let relativePath = getRelativePathFromRepo absolutePath
 
-    {| AbsolutePath = absolutePath
-       RelativePath = relativePath |}
+    { AbsolutePath = absolutePath
+      RelativePath = relativePath }
