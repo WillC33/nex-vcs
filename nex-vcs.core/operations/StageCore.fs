@@ -4,16 +4,19 @@ open System
 open System.IO
 open Nex.Core.DiffCore
 open Nex.Core.Types
-open Nex.Core.Utils.Config
 open Nex.Core.Utils.FileResolver
 open Nex.Core.Utils.Hashing
+open Nex.Core.Utils.NexDirectory
 open Nex.Core.Utils.Serialisation
 
 
 
 module StageCore =
     [<CLIMutable>]
-    type StagedEntry = { FilePath: string; Hash: string }
+    type StagedEntry =
+        { FilePath: string
+          RelativePath: string
+          Hash: string }
 
     let private compareHashes (newHash: string) (committedHash: string option) =
         match committedHash with
@@ -21,19 +24,24 @@ module StageCore =
         | None -> false
 
     // IO operations
-    let stagingFile (workingDir: string) =
-        Path.Combine(workingDir, ".nex", "stage.bson")
+    let getStagingFile () =
+        match tryGetNexRepoPath () with
+        | Some dir -> Path.Combine(dir, "stage.bson") |> Path.GetFullPath
+        | None -> failwith "No nex repository found"
 
     let loadStagingArea: Result<StagedEntry list, string> =
-        let file = stagingFile <| getWorkingDirectory ()
+        let file = getStagingFile ()
 
         try
-            if File.Exists(file) then readBson file |> Ok else Ok []
+            if File.Exists(file) then
+                readBsonEnumerable file |> Ok
+            else
+                Ok []
         with ex ->
             Error ex.Message
 
     let private saveStagingArea (entries: StagedEntry list) : Result<unit, string> =
-        let file = stagingFile <| getWorkingDirectory ()
+        let file = getStagingFile ()
 
         try
             let dir = Path.GetDirectoryName(file)
@@ -101,12 +109,19 @@ module StageCore =
         |> ignore
 
     let private stageFile (target: string) : StageAction =
-        let { AbsolutePath = abs } = resolvePaths target
+        let { AbsolutePath = abs
+              RelativePath = rel } =
+            resolvePaths target
+
         let changed = checkFileChanged target
 
         match changed with
         | Ok(Some hash) ->
-            let entry = [ { FilePath = abs; Hash = hash } ]
+            let entry =
+                [ { FilePath = abs
+                    RelativePath = rel
+                    Hash = hash } ]
+
             writeToStaging entry
             StageAction.Staged
         | Ok None -> StageAction.Unchanged
@@ -114,13 +129,19 @@ module StageCore =
 
 
     let private stageFolder (folder: string) : Result<StageAction, StageAction> =
-        let { AbsolutePath = abs } = resolvePaths folder
+        let { AbsolutePath = abs
+              RelativePath = rel } =
+            resolvePaths folder
 
         collectFiles abs
         |> Result.map (
             List.choose (fun file ->
                 match checkFileChanged file with
-                | Ok(Some hash) -> Some { FilePath = abs; Hash = hash }
+                | Ok(Some hash) ->
+                    Some
+                        { FilePath = $"{abs}/{file}"
+                          RelativePath = $"{rel}/{file}"
+                          Hash = hash }
                 | _ -> None)
         )
         |> Result.bind (function

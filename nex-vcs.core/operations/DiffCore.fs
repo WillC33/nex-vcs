@@ -5,10 +5,10 @@ open System.IO
 open Nex.Core.Types
 open Nex.Core.Utils.Config
 open Nex.Core.Utils.NexDirectory
+open Nex.Core.Utils.Serialisation
 open DiffEngine
 
 module DiffCore =
-    open Nex.Core.Utils.Serialisation
 
     /// We will always ignore these...
     let private standardIgnores = [ ".nex"; ".nexlink" ]
@@ -148,25 +148,25 @@ module DiffCore =
     /// Provides a hunk diff of a given file
     /// </summary>
     /// <param name="relativeFilePath"></param>
-    let diffFile (relativeFilePath: string) =
+    let diffFile (relativeFilePath: string) : Result<DiffHunk list, DiffAction> =
         let filePath = Path.Combine(getWorkingDirectory (), relativeFilePath)
 
-        let currentContent =
-            if File.Exists(filePath) then
-                File.ReadAllText(filePath)
-            else
-                "" // Not yet indexed by nex
+        if not (File.Exists(filePath)) then
+            Error DiffAction.NotFound
+        else
+            let currentContent = File.ReadAllText(filePath)
+            let committedContent = getCommittedContent filePath
 
-        let committedContent = getCommittedContent filePath
-
-        match committedContent with
-        | "" -> // Treat new files as a single hunk with all lines added
-            [ { StartLineA = 0
-                StartLineB = 0
-                LinesA = 0
-                LinesB = currentContent.Split('\n').Length
-                Lines = currentContent.Split('\n') |> Array.toList |> List.map Added } ]
-        | _ -> diffTextToHunks committedContent currentContent
+            Ok(
+                match committedContent with
+                | "" -> // Treat new files as a single hunk with all lines added
+                    [ { StartLineA = 0
+                        StartLineB = 0
+                        LinesA = 0
+                        LinesB = currentContent.Split('\n').Length
+                        Lines = currentContent.Split('\n') |> Array.toList |> List.map Added } ]
+                | _ -> diffTextToHunks committedContent currentContent
+            )
 
     /// <summary>
     /// Provides a summary diff for the working directory of the nex repository

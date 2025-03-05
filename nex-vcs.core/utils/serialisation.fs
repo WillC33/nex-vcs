@@ -1,5 +1,6 @@
 module Nex.Core.Utils.Serialisation
 
+open System.Collections
 open System.IO
 open Newtonsoft.Json
 open Newtonsoft.Json.Bson
@@ -22,6 +23,12 @@ let writeBson<'T> (path: string) (data: 'T) =
 ///<param name="path">the path to read the file from</param>
 ///<returns>the deserialised data</returns>
 let readBson<'T> (path: string) : 'T =
+    use fs = new FileStream(path, FileMode.Open, FileAccess.Read)
+    use reader = new BsonDataReader(fs)
+    let serialiser = JsonSerializer()
+    serialiser.Deserialize<'T>(reader)
+
+let readBsonEnumerable<'T when 'T :> IEnumerable> (path: string) : 'T =
     use fs = new FileStream(path, FileMode.Open, FileAccess.Read)
     use reader = new BsonDataReader(fs)
     reader.ReadRootValueAsArray <- true

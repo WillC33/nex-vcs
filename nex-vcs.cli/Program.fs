@@ -81,7 +81,7 @@ let main argv =
 
         match results.GetAllResults() with
         | [ Init path ] ->
-            let resolvedPath = defaultArg path "." // Use current directory if no path provided
+            let resolvedPath = defaultArg path Environment.CurrentDirectory
 
             match InitCore.initRepo (Some resolvedPath) with
             | Ok t -> getLocalisedMessage (Some resolvedPath) (InitResponse t) |> message None
@@ -109,7 +109,11 @@ let main argv =
             getLocalisedMessage None (DiffResponse UncommitedChanges) |> message None
 
             match path with
-            | Some p -> DiffCore.diffFile p |> DiffCli.displayHunkDiffs p
+            | Some p ->
+                match DiffCore.diffFile p with
+                | Ok hunks -> DiffCli.displayHunkDiffs p hunks
+                | Error DiffAction.NotFound -> getLocalisedMessage (Some p) (DiffResponse DiffAction.NotFound) |> error
+                | Error _ -> getLocalisedMessage None (FaultResponse Fatal) |> error
             | None -> DiffCore.diffWorkingDirectory () |> DiffCli.displaySummaryDiffs
 
             0
@@ -129,7 +133,9 @@ let main argv =
             0
 
         | [ Status ] ->
-            StageCore.stageStatus |> List.iter (fun item -> printf $"%s{item.FilePath}")
+            StageCore.stageStatus
+            |> List.iter (fun item -> printfn $"%s{item.RelativePath}")
+
             0
 
         | [ Checkout hash ] ->

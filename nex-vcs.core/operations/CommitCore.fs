@@ -99,4 +99,6 @@ module CommitCore =
             // Update HEAD to point to the new commit.
             File.WriteAllText(headPath, commitHash)
 
+            File.Delete(stageFile)
+
             printfn $"Created commit: %s{commitHash}"

@@ -73,7 +73,7 @@ module InitCore =
                Head = Path.Combine(repositoryDir, "refs/HEAD")
                Config = Path.Combine(repositoryDir, "config.toml") |}
 
-        let { AbsolutePath = absolutePath } = resolvePaths <| fetchInitDir workingDirOpt
+        let { AbsolutePath = absolutePath } = resolveInitPaths <| fetchInitDir workingDirOpt
         let paths = createPaths absolutePath
 
         checkRepositoryExists paths.Repository

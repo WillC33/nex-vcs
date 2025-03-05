@@ -26,6 +26,7 @@ type DiffAction =
     | ChangedNLines
     // Faults
     | FailedToGenerate
+    | NotFound
 
 /// <summary>
 /// Represents the actions that can be returned from the commit command
