@@ -95,7 +95,6 @@ type InitCoreTests() =
 
     [<Fact>]
     member _.``Repository creation allowed with special characters in path``() =
-        //This has been tested on MacOS and is allowed
         let testDir = Path.Combine(tempPath, "test|<>:*?")
         let result = InitCore.initRepo (Some testDir)
 
