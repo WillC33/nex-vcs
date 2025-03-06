@@ -89,6 +89,6 @@ let displayHunkDiffs (path: string) (hunks: DiffHunk list) =
                     message
                         (Some
                             { defaultOptions with
-                                BackgroundColor = Some ConsoleColor.Red
+                                CustomColor = Some ConsoleColor.DarkRed
                                 IncludeLineSpace = false })
                         $"-{text}"))

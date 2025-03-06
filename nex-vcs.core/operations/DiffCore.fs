@@ -4,6 +4,7 @@ open System
 open System.IO
 open Nex.Core.Types
 open Nex.Core.Utils.Config
+open Nex.Core.Utils.FileResolver
 open Nex.Core.Utils.NexDirectory
 open Nex.Core.Utils.Serialisation
 open DiffEngine
@@ -149,13 +150,13 @@ module DiffCore =
     /// </summary>
     /// <param name="relativeFilePath"></param>
     let diffFile (relativeFilePath: string) : Result<DiffHunk list, DiffAction> =
-        let filePath = Path.Combine(getWorkingDirectory (), relativeFilePath)
+        let filePath = resolvePaths relativeFilePath
 
-        if not (File.Exists(filePath)) then
+        if not (File.Exists(filePath.AbsolutePath)) then
             Error DiffAction.NotFound
         else
-            let currentContent = File.ReadAllText(filePath)
-            let committedContent = getCommittedContent filePath
+            let currentContent = File.ReadAllText(filePath.AbsolutePath)
+            let committedContent = getCommittedContent filePath.AbsolutePath
 
             Ok(
                 match committedContent with
