@@ -3,7 +3,6 @@ namespace Nex.Core
 open System
 open System.IO
 open Nex.Core.Types
-open Nex.Core.Utils.Config
 open Nex.Core.Utils.FileResolver
 open Nex.Core.Utils.NexDirectory
 open Nex.Core.Utils.Serialisation
@@ -173,19 +172,19 @@ module DiffCore =
     /// Provides a summary diff for the working directory of the nex repository
     /// </summary>
     let diffWorkingDirectory () =
-        let workingDir = getWorkingDirectory ()
+        let workingDir = resolvePaths "."
 
-        if not (Directory.Exists(workingDir)) then
+        if not (Directory.Exists(workingDir.AbsolutePath)) then
             []
         else
-            let ignores = getIgnoredFiles workingDir
-            let files = findFiles workingDir ignores
+            let ignores = getIgnoredFiles workingDir.AbsolutePath
+            let files = findFiles workingDir.AbsolutePath ignores
 
             files
             |> List.map (fun file ->
                 let relativePath =
                     file
-                        .Replace(workingDir, "")
+                        .Replace(workingDir.AbsolutePath, "")
                         .TrimStart(Path.DirectorySeparatorChar)
                         .Replace(Path.DirectorySeparatorChar, '/')
 

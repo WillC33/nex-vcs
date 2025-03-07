@@ -8,10 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="InitCore.fs"/>
-        <Compile Include="DiffEngine.fs"/>
-        <Compile Include="DiffCore.fs"/>
-        <Compile Include="Hashing.fs"/>
+        <Compile Include="CoreTests\InitCore.fs"/>
+        <Compile Include="CoreTests\DiffEngine.fs"/>
+        <Compile Include="CoreTests\DiffCore.fs"/>
+        <Compile Include="CoreTests\Hashing.fs"/>
+        <Compile Include="CliTests\InitCli.fs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -23,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\nex-vcs.cli\nex-vcs.cli.fsproj" />
         <ProjectReference Include="..\nex-vcs.core\nex-vcs.core.fsproj"/>
     </ItemGroup>
 

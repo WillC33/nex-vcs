@@ -69,7 +69,12 @@ let resolvePaths (target: string) : PathSet =
 /// A tuple containing the absolute path and the relative path with respect to the working directory.
 /// </returns>
 let resolveInitPaths (target: string) : PathSet =
-    let absolutePath = getAbsPath target
+    let absolutePath =
+        if Path.IsPathRooted(target) then
+            target
+        else
+            Path.GetFullPath target
+
     let relativePath = getRelativePathFromRepo absolutePath
 
     { AbsolutePath = absolutePath

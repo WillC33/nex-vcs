@@ -64,13 +64,14 @@ module Tr =
 
                      (DiffResponse UncommitedChanges, Simple "Uncommitted changes to the nex repo:")
                      (DiffResponse FileDiffResult_FileName, WithArgs(sprintf "File: %s"))
+                     (DiffResponse DiffAction.NotFound, WithArgs(sprintf "No file found @ %s"))
                      (DiffResponse NoChanges, Simple "No changes")
                      (DiffResponse AddedNLines, WithArgs(sprintf "Added %s lines"))
                      (DiffResponse DeletedNLines, WithArgs(sprintf "Deleted %s lines"))
                      (DiffResponse ChangedNLines, WithArgs(sprintf "Changed %s lines"))
 
                      (CommitResponse Created, Simple "Commit created")
-                     
+
                      (StageResponse Staged, WithArgs(sprintf "Staged @ %s"))
                      (StageResponse Unstaged, WithArgs(sprintf "Unstaged @ %s"))
                      (StageResponse Unchanged, WithArgs(sprintf "No Changes to stage @ %s"))
