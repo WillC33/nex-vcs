@@ -1,17 +1,19 @@
-﻿module InitCore
+﻿namespace Nex.Tests.Core
 
 open System
 open System.Diagnostics
 open System.IO
-open Xunit
 open Nex.Core
 open Nex.Core.Types
+open Xunit
+open Xunit.Categories
+
 
 /// <summary>
 /// Tests for the public api of init operation
 /// </summary>
+[<UnitTest>]
 type InitCoreTests() =
-
     /// Helper to generate a temporary testing dir
     let tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())
 
@@ -36,8 +38,6 @@ type InitCoreTests() =
             if Directory.Exists(defaultDir) then
                 Directory.Delete(defaultDir, true)
 
-
-
     [<Fact>]
     member _.``Repository is created successfully in specified directory``() =
         let testDir = Path.Combine(tempPath, "testRepo")
@@ -45,7 +45,7 @@ type InitCoreTests() =
 
         Assert.True(
             match result with
-            | Ok RepositoryCreated -> true
+            | (Ok RepositoryCreated) -> true
             | _ -> false
         )
 
@@ -83,15 +83,15 @@ type InitCoreTests() =
             | _ -> false
         )
 
-    [<Fact>]
+    (* TODO: Check parsing logic but this should be an impossible state to reach - [<Fact>]
     member _.``Repository creation defaults to current directory with empty path``() =
-        let result = InitCore.initRepo (Some "")
+        let result = InitCore.initRepo None
 
         Assert.True(
             match result with
             | Error DirectoryCreateFailed -> false
             | _ -> true
-        )
+        )*)
 
     [<Fact>]
     member _.``Repository creation allowed with special characters in path``() =

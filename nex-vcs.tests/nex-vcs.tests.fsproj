@@ -8,24 +8,46 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="CollectionUtils.fs"/>
+        <Compile Include="Mocking\Fixtures.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="CoreTests\InitCore.fs"/>
         <Compile Include="CoreTests\DiffEngine.fs"/>
         <Compile Include="CoreTests\DiffCore.fs"/>
         <Compile Include="CoreTests\Hashing.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="CliTests\InitCli.fs"/>
+        <Compile Include="CliTests\FixtureTests.fs"/>
+        <Content Include="mock-nex-repo\.nex\refs\HEAD"/>
+        <Content Include="mock-nex-repo\.nex\config.toml"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.2"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0"/>
         <PackageReference Include="xunit" Version="2.9.2"/>
+        <PackageReference Include="xunit.categories" Version="3.0.1"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
         <PackageReference Update="FSharp.Core" Version="9.0.201"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\nex-vcs.cli\nex-vcs.cli.fsproj" />
+        <Content Include="mock-nex-repo\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\nex-vcs.cli\nex-vcs.cli.fsproj"/>
         <ProjectReference Include="..\nex-vcs.core\nex-vcs.core.fsproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="mock-nex-repo\.nex\objects\"/>
     </ItemGroup>
 
 </Project>

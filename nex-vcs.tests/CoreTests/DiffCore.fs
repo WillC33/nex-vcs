@@ -1,4 +1,4 @@
-module DiffCoreTests
+namespace Nex.Tests.Core
 
 open System
 open System.IO
@@ -6,16 +6,11 @@ open Nex.Core
 open Nex.Core.Types
 open Xunit
 open Nex.Core.Utils.Serialisation
+open Xunit.Categories
 
-/// <summary>
-/// An attribute to define sequential test executions for those that have shared repository resources
-/// </summary>
-[<CollectionDefinition("Sequential-Execution", DisableParallelization = true)>]
-type SequentialCollection() = class end
-
-
+[<UnitTest>]
 //Tests have some mutable shared state for creating the repo
-[<Collection("Sequential-Execution")>]
+[<Collection("Sequential")>]
 type DiffCoreTests() =
     let mutable originalWorkingDir = ""
     let mutable testWorkingDir = ""
@@ -86,7 +81,6 @@ language = "EN"
         member this.Dispose() = this.Cleanup()
 
     interface IClassFixture<DiffCoreTests>
-    //member this.ClassFixture() = this.Setup()
 
 
     [<Fact>]
