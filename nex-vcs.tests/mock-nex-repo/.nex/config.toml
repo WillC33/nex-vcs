@@ -1,0 +1,5 @@
+# Nex configuration File
+
+working_directory = ".."
+language = "EN"
+      
