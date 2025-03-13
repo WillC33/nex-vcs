@@ -20,6 +20,7 @@
         <Compile Include="utils\hashing.fs"/>
         <Compile Include="utils\Localisation.fs"/>
         <Compile Include="utils\FileResolver.fs"/>
+        <Compile Include="utils\globbing.fs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -33,6 +34,7 @@
         <Compile Include="operations\DiffCore.fs"/>
         <Compile Include="operations\StageCore.fs"/>
         <Compile Include="operations\CommitCore.fs"/>
+        <Compile Include="operations\IgnoreCore.fs"/>
 
     </ItemGroup>
 

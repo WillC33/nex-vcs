@@ -17,6 +17,8 @@
         <Compile Include="CoreTests\DiffEngine.fs"/>
         <Compile Include="CoreTests\DiffCore.fs"/>
         <Compile Include="CoreTests\Hashing.fs"/>
+        <Compile Include="CoreTests\IgnoreCore.fs"/>
+        <Compile Include="CoreTests\Globbing.fs"/>
     </ItemGroup>
 
     <ItemGroup>

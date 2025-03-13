@@ -37,14 +37,19 @@ type RepoFixture() =
     let originalDir = Environment.CurrentDirectory
     let repoSrc = Path.Combine(AppContext.BaseDirectory, "mock-nex-repo")
 
-    let CopyDirectory source target =
-        for dirPath in Directory.GetDirectories(source, "*", SearchOption.AllDirectories) do
-            Directory.CreateDirectory(dirPath.Replace(source, target)) |> ignore
+    let copyDirectory source target =
+        Directory.GetDirectories(source, "*", SearchOption.AllDirectories)
+        |> Array.iter (fun dirPath ->
+            let targetDir = dirPath.Replace(source, target)
+            Directory.CreateDirectory(targetDir) |> ignore)
 
-        for filePath in Directory.GetFiles(source, "*", SearchOption.AllDirectories) do
-            File.Copy(filePath, filePath.Replace(source, target), overwrite = true)
+        Directory.GetFiles(source, "*", SearchOption.AllDirectories)
+        |> Array.iter (fun filePath ->
+            let targetFile = filePath.Replace(source, target)
+            File.Copy(filePath, targetFile, overwrite = true))
 
-    do CopyDirectory repoSrc testDir
+
+    do copyDirectory repoSrc testDir
 
     member _.TestDir = testDir
     member _.OriginalDir = originalDir
